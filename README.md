@@ -7,7 +7,7 @@
 
 ## Intro
 This December, embark on a daily journey of innovation and insight with the **Security Copilot Countdown Calendar**! 
-Each day, a new post will spotlight Security Copilot – Microsoft’s AI-powered security assistant – offering practical knowledge and inspiration for security professionals, tech enthusiasts, and anyone curious about the future of AI in cybersecurity. 
+Each day, a new post will spotlight Security Copilot – Microsoft’s AI-powered security assistant – offering practical knowledge and inspiration for security professionals, tech enthusiasts, and anyone curious about the future of AI in cybersecurity. Read more about it on LinkedIn [here](https://www.linkedin.com/pulse/introducing-tech-advent-calendar-security-copilot-edition-mario-cuomo-xk6lf/?trackingId=dX%2FRwN9OQB2SAdZxTW422w%3D%3D). 
 
 **What Awaits You?**
 
