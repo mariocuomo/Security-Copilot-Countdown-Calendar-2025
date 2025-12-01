@@ -34,7 +34,7 @@ Whether you’re looking to boost your expertise or simply enjoy the countdown t
 
 | Day | Title | Blog post | Supporting Material
 | :--- | :--- | :--- | :--- |
-| 1st | ... | ... | ... |
+| 1st | Simplify Vulnerability Management with Security Copilot agent | ... | ... |
 | 2nd | ... | ... | ... |
 | 3rd | ... | ... | ... |
 | 4th | ... | ... | ... |
