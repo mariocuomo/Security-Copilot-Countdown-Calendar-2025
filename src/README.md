@@ -9,7 +9,7 @@
 
 | Day | Title | Blog post | Supporting Material
 | :--- | :--- | :--- | :--- |
-| 1st | Simplify Vulnerability Management with Security Copilot agent  | ... | ... |
+| 1st | Simplify Vulnerability Management with Security Copilot agent | [Link](https://www.linkedin.com/pulse/01-simplify-vulnerability-management-security-copilot-mario-cuomo-ponvf/?trackingId=9zGtjUJ%2FL2rjJroMWk6sCg%3D%3D) | [Link](https://github.com/mariocuomo/Security-Copilot-Countdown-Calendar-2025/tree/main/src/01%20-%20Vulnerability%20Management%20Agent) |
 | 2nd | ... | ... | ... |
 | 3rd | ... | ... | ... |
 | 4th | ... | ... | ... |
@@ -31,6 +31,10 @@
 | 29th | ... | ... | ... |
 | 30th | ... | ... | ... |
 | 31th | ... | ... | ... |
+
+
+
+
 
 
 
