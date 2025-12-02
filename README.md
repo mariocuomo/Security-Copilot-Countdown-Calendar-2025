@@ -35,7 +35,7 @@ Whether you’re looking to boost your expertise or simply enjoy the countdown t
 | Day | Title | Blog post | Supporting Material
 | :--- | :--- | :--- | :--- |
 | 1st | Simplify Vulnerability Management with Security Copilot agent | [Link](https://www.linkedin.com/pulse/01-simplify-vulnerability-management-security-copilot-mario-cuomo-ponvf/?trackingId=9zGtjUJ%2FL2rjJroMWk6sCg%3D%3D) | [Link](https://github.com/mariocuomo/Security-Copilot-Countdown-Calendar-2025/tree/main/src/01%20-%20Vulnerability%20Management%20Agent) |
-| 2nd | ... | ... | ... |
+| 2nd | Can Security Copilot raise alerts in my environment? | [Link](https://www.linkedin.com/pulse/02-can-security-copilot-generate-alerts-my-mario-cuomo-obr1f/?trackingId=pfwVDndhY5JBHVEp96fRjA%3D%3D) |  |
 | 3rd | ... | ... | ... |
 | 4th | ... | ... | ... |
 | 5th | ... | ... | ... |
