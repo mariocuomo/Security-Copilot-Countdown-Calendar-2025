@@ -39,8 +39,7 @@ Whether you’re looking to boost your expertise or simply enjoy the countdown t
 | 3rd | Publish Security Copilot plugins via Sentinel MCP Server | [Link](https://www.linkedin.com/pulse/03-publish-security-copilot-plugins-via-sentinel-mcp-mario-cuomo-42tif/?trackingId=qGBgOQ%2Boh1Rs83zSLTkO9w%3D%3D) |  |
 | 4th | Analyse Security Copilot interactions with KQL | [Link](https://www.linkedin.com/pulse/04-analyse-security-copilot-interactions-kql-mario-cuomo-wd05f/?trackingId=eF%2FdSRyMTuaQqczAG3MUvA%3D%3D) |  |
 | 5th | Block access to Security Copilot via Conditional Access Policy | [Link](https://www.linkedin.com/pulse/05-block-access-security-copilot-via-conditional-policy-mario-cuomo-tojtf/?trackingId=vMmN9PXauhxPMlzeLQn8lQ%3D%3D) |  |
-| 8th | ... | ... | ... |
-| 9th | ... | ... | ... |
+| 9th | How to decrease the Security Compute Units usage | [Link](https://www.linkedin.com/pulse/09-how-decrease-security-compute-units-usage-mario-cuomo-1yobf/) |  |
 | 10th | ... | ... | ... |
 | 11th | ... | ... | ... |
 | 12th | ... | ... | ... |
