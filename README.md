@@ -43,7 +43,7 @@ Whether you’re looking to boost your expertise or simply enjoy the countdown t
 | 10th | Broker Architecture with Security Copilot | [Link](https://www.linkedin.com/pulse/10-broker-architecture-security-copilot-mario-cuomo-lthdf/) |  |
 | 11th | Azure AI Search and Security Copilot: the best duo | [Link](https://www.linkedin.com/pulse/11-azure-ai-search-security-copilot-best-duo-mario-cuomo-yewmf/) |  |
 | 12th | Interact with Security Copilot via APIs | [Link](https://www.linkedin.com/pulse/12-interact-security-copilot-via-apis-mario-cuomo-0xqxf/?trackingId=ER9dpu8IPJBVLSKayJNr%2BQ%3D%3D) | [Link](https://github.com/mariocuomo/Security-Copilot/tree/main/Security%20Copilot%20APIs/GraphAPI) |
-| 15th | ... | ... | ... |
+| 15th | Best Practices for Plugins Creation | [Link](https://www.linkedin.com/pulse/15-best-practices-plugins-creation-mario-cuomo-bdiif/?trackingId=HRwFcmBXu7QZbxCvn5eIEQ%3D%3D) |  |
 | 16th | ... | ... | ... |
 | 17th | ... | ... | ... |
 | 18th | ... | ... | ... |
