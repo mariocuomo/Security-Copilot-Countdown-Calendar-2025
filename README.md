@@ -45,7 +45,7 @@ Whether you’re looking to boost your expertise or simply enjoy the countdown t
 | 12th | Interact with Security Copilot via APIs | [Link](https://www.linkedin.com/pulse/12-interact-security-copilot-via-apis-mario-cuomo-0xqxf/?trackingId=ER9dpu8IPJBVLSKayJNr%2BQ%3D%3D) | [Link](https://github.com/mariocuomo/Security-Copilot/tree/main/Security%20Copilot%20APIs/GraphAPI) |
 | 15th | Best Practices for Plugins Creation | [Link](https://www.linkedin.com/pulse/15-best-practices-plugins-creation-mario-cuomo-bdiif/?trackingId=HRwFcmBXu7QZbxCvn5eIEQ%3D%3D) |  |
 | 16th | How to download prompts and evaluations with Export Admin APIs | [Link](https://www.linkedin.com/pulse/16-how-download-prompts-evaluations-export-admin-apis-mario-cuomo-qmkhe/) | [Link](https://github.com/mariocuomo/Security-Copilot/tree/main/Security%20Copilot%20APIs/ExportAdminAPI) |
-| 17th | ... | ... | ... |
+| 17th | Security Copilot Browser Extension | [Link](https://www.linkedin.com/pulse/17-security-copilot-browser-extension-mario-cuomo-hdyxe/?trackingId=yPYNwUBUW8KHruJSstANCg%3D%3D) | [Link](https://github.com/mariocuomo/Security-Copilot-Countdown-Calendar-2025/tree/main/src/17%20-%20browser%20extension) |
 | 18th | ... | ... | ... |
 | 19th | ... | ... | ... |
 | 22th | ... | ... | ... |
