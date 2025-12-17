@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Copilot Chat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <h1>🛡️ Security Copilot</h1>
+                <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+            </div>
+        </div>
+
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-section">
+            <div class="auth-content">
+                <p class="auth-message">Please authenticate to use Security Copilot</p>
+                <button id="loginBtn" class="primary-btn">Sign In with Microsoft</button>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="settings-panel hidden">
+            <h3>Settings</h3>
+            <div class="form-group">
+                <label for="tenantId">Tenant ID:</label>
+                <input type="text" id="tenantId" placeholder="Enter your Tenant ID">
+            </div>
+            <div class="form-group">
+                <label for="clientId">Client ID:</label>
+                <input type="text" id="clientId" placeholder="Enter your Client ID">
+            </div>
+            <div class="form-group">
+                <label for="workspaceId">Workspace ID:</label>
+                <input type="text" id="workspaceId" placeholder="default" value="default">
+            </div>
+            <div class="settings-actions">
+                <button id="saveSettingsBtn" class="primary-btn">Save</button>
+                <button id="cancelSettingsBtn" class="secondary-btn">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div id="chatSection" class="chat-section hidden">
+            <!-- User Info -->
+            <div class="user-info">
+                <div class="user-details">
+                    <span id="userEmail" class="user-email"></span>
+                    <div class="session-info">
+                        <span id="sessionName" class="session-name"></span>
+                        <span id="sessionId" class="session-id"></span>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="logout-btn">Sign Out</button>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chatMessages" class="chat-messages"></div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="typing-indicator hidden">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="How can Security Copilot help?" 
+                    rows="3"
+                ></textarea>
+                <button id="sendBtn" class="send-btn">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M2 10L18 2L12 18L10 12L2 10Z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- New Session Button -->
+            <div class="session-controls">
+                <button id="newSessionBtn" class="secondary-btn">New Session</button>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message hidden"></div>
+        
+        <!-- Session Name Modal -->
+        <div id="sessionNameModal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3>New Session</h3>
+                <p class="modal-description">Give your session a memorable name</p>
+                <div class="form-group">
+                    <input type="text" id="sessionNameInput" placeholder="e.g., Threat Investigation" autocomplete="off">
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelSessionBtn" class="secondary-btn">Cancel</button>
+                    <button id="createSessionBtn" class="primary-btn">Create Session</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
