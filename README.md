@@ -47,7 +47,7 @@ Whether you’re looking to boost your expertise or simply enjoy the countdown t
 | 16th | How to download prompts and evaluations with Export Admin APIs | [Link](https://www.linkedin.com/pulse/16-how-download-prompts-evaluations-export-admin-apis-mario-cuomo-qmkhe/) | [Link](https://github.com/mariocuomo/Security-Copilot/tree/main/Security%20Copilot%20APIs/ExportAdminAPI) |
 | 17th | Security Copilot Browser Extension | [Link](https://www.linkedin.com/pulse/17-security-copilot-browser-extension-mario-cuomo-hdyxe/?trackingId=yPYNwUBUW8KHruJSstANCg%3D%3D) | [Link](https://github.com/mariocuomo/Security-Copilot-Countdown-Calendar-2025/tree/main/src/17%20-%20browser%20extension) |
 | 18th | Different way to query Sentinel data via Security Copilot | [Link](https://www.linkedin.com/pulse/18-different-way-query-sentinel-data-via-security-copilot-cuomo-feo9e/) |  |
-| 19th | ... | ... | ... |
+| 19th | The Logic App skill, a hidden diamond | [Link](https://www.linkedin.com/pulse/19-logic-app-skil-hidden-diamond-mario-cuomo-g4zjf/) |  |
 | 22th | ... | ... | ... |
 | 23th | ... | ... | ... |
 | 24th | ... | ... | ... |
