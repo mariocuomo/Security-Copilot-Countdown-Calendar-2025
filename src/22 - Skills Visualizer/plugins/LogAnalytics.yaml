@@ -1,0 +1,168 @@
+Descriptor:
+  Name: LogAnalytics
+  DisplayName: Log Analytics Operations
+  Description: Plugin for logging errors and events to Azure Log Analytics Workspace
+
+SkillGroups:
+  - Format: MCP
+    Skills:
+      - Name: LogError
+        DisplayName: Log Error to Workspace
+        Description: Logs error messages to Log Analytics custom table
+        Inputs:
+          - Name: ErrorMessage
+            Description: Error message to log
+            Required: true
+          - Name: ErrorCode
+            Description: Error code or identifier
+            Required: false
+          - Name: Source
+            Description: Source system or component that generated the error
+            Required: true
+          - Name: Severity
+            Description: Error severity (Critical/Error/Warning/Info)
+            Required: true
+          - Name: AdditionalData
+            Description: Additional JSON data to log
+            Required: false
+        Settings:
+          Endpoint: https://api.loganalytics.io/v1/workspaces/{workspaceId}/tables/CustomErrors_CL
+          Method: POST
+          Authentication: WorkspaceKey
+
+      - Name: LogSecurityEvent
+        DisplayName: Log Security Event
+        Description: Logs security events to Log Analytics
+        Inputs:
+          - Name: EventType
+            Description: Type of security event
+            Required: true
+          - Name: EventDescription
+            Description: Detailed description of the event
+            Required: true
+          - Name: SourceIP
+            Description: Source IP address if applicable
+            Required: false
+          - Name: UserPrincipalName
+            Description: User involved in the event
+            Required: false
+          - Name: Severity
+            Description: Event severity level
+            Required: true
+        Settings:
+          Endpoint: https://api.loganalytics.io/v1/workspaces/{workspaceId}/tables/CustomSecurityEvents_CL
+          Method: POST
+          Authentication: WorkspaceKey
+
+      - Name: LogAuditEvent
+        DisplayName: Log Audit Event
+        Description: Logs audit trail events for compliance
+        Inputs:
+          - Name: Action
+            Description: Action performed
+            Required: true
+          - Name: Actor
+            Description: User or system that performed the action
+            Required: true
+          - Name: Target
+            Description: Target resource or object
+            Required: false
+          - Name: Result
+            Description: Result of the action (Success/Failure)
+            Required: true
+          - Name: Details
+            Description: Additional audit details
+            Required: false
+        Settings:
+          Endpoint: https://api.loganalytics.io/v1/workspaces/{workspaceId}/tables/CustomAudit_CL
+          Method: POST
+          Authentication: WorkspaceKey
+
+  - Format: KQL
+    Skills:
+      - Name: QueryCustomErrors
+        DisplayName: Query Custom Error Logs
+        Description: Retrieves errors from custom Log Analytics table
+        Inputs:
+          - Name: TimeRange
+            Description: Time range to query (e.g., 1h, 24h, 7d)
+            Required: false
+          - Name: Severity
+            Description: Filter by severity level
+            Required: false
+          - Name: Source
+            Description: Filter by source system
+            Required: false
+        Settings:
+          Target: Sentinel
+          Template: |-
+            let timeRange = {{TimeRange}};
+            let severity = "{{Severity}}";
+            let source = "{{Source}}";
+            CustomErrors_CL
+            | where TimeGenerated > ago(timeRange)
+            | where isempty(severity) or Severity_s == severity
+            | where isempty(source) or Source_s == source
+            | project 
+                TimeGenerated,
+                ErrorMessage_s,
+                ErrorCode_s,
+                Source_s,
+                Severity_s,
+                AdditionalData_s
+            | order by TimeGenerated desc
+            | take 500
+
+      - Name: GetErrorStatistics
+        DisplayName: Get Error Statistics
+        Description: Provides statistical analysis of logged errors
+        Inputs:
+          - Name: TimeRange
+            Description: Time range for statistics
+            Required: false
+        Settings:
+          Target: Sentinel
+          Template: |-
+            let timeRange = {{TimeRange}};
+            CustomErrors_CL
+            | where TimeGenerated > ago(timeRange)
+            | summarize 
+                TotalErrors = count(),
+                CriticalErrors = countif(Severity_s == "Critical"),
+                ErrorsCount = countif(Severity_s == "Error"),
+                WarningsCount = countif(Severity_s == "Warning"),
+                UniqueErrorCodes = dcount(ErrorCode_s),
+                UniqueSources = dcount(Source_s)
+                by bin(TimeGenerated, 1h)
+            | order by TimeGenerated desc
+
+  - Format: GPT
+    Skills:
+      - Name: AnalyzeErrorPatterns
+        DisplayName: Analyze Error Patterns
+        Description: AI analysis of error patterns and root causes
+        Inputs:
+          - Name: ErrorLogs
+            Description: Error log data to analyze
+            Required: true
+          - Name: TimeRange
+            Description: Time range of the logs
+            Required: false
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            Analyze the following error logs to identify patterns, root causes, and recommendations.
+            
+            Error Logs:
+            {{ErrorLogs}}
+            
+            Time Range: {{TimeRange}}
+            
+            Provide:
+            1. Common Error Patterns
+            2. Potential Root Causes
+            3. Systems/Components Most Affected
+            4. Recommended Actions
+            5. Priority Assessment
+            
+            Focus on actionable insights for the operations team.

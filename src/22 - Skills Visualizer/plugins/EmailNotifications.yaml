@@ -1,0 +1,127 @@
+Descriptor:
+  Name: EmailNotifications
+  DisplayName: Email Notification Service
+  Description: Plugin for sending email notifications for security events and alerts
+
+SkillGroups:
+  - Format: MCP
+    Skills:
+      - Name: SendSecurityAlert
+        DisplayName: Send Security Alert Email
+        Description: Sends email notification for critical security alerts
+        Inputs:
+          - Name: Recipients
+            Description: Comma-separated email addresses
+            Required: true
+          - Name: Subject
+            Description: Email subject line
+            Required: true
+          - Name: AlertData
+            Description: Security alert data to include in email
+            Required: true
+          - Name: Priority
+            Description: Email priority (High/Normal/Low)
+            Required: false
+        Settings:
+          Endpoint: https://api.contoso.com/notifications/send
+          Method: POST
+          Authentication: OAuth2
+
+      - Name: SendIncidentReport
+        DisplayName: Send Incident Report
+        Description: Sends formatted incident report via email
+        Inputs:
+          - Name: IncidentId
+            Description: Incident ID for the report
+            Required: true
+          - Name: Recipients
+            Description: Email addresses to send report to
+            Required: true
+          - Name: IncludeAttachments
+            Description: Include detailed logs as attachment (true/false)
+            Required: false
+          - Name: ReportFormat
+            Description: Report format (HTML/PDF/Text)
+            Required: false
+        Settings:
+          Endpoint: https://api.contoso.com/reports/send
+          Method: POST
+          Authentication: OAuth2
+
+      - Name: SendWeeklySummary
+        DisplayName: Send Weekly Security Summary
+        Description: Sends weekly summary of security events
+        Inputs:
+          - Name: Recipients
+            Description: Distribution list for weekly summary
+            Required: true
+          - Name: StartDate
+            Description: Start date for summary period
+            Required: false
+          - Name: EndDate
+            Description: End date for summary period
+            Required: false
+        Settings:
+          Endpoint: https://api.contoso.com/summaries/weekly
+          Method: POST
+          Authentication: OAuth2
+
+  - Format: GPT
+    Skills:
+      - Name: ComposeSecurityEmail
+        DisplayName: Compose Security Email
+        Description: AI-generated email content for security notifications
+        Inputs:
+          - Name: SecurityData
+            Description: Security data to include in email
+            Required: true
+          - Name: Audience
+            Description: Target audience (Executive/Technical/General)
+            Required: true
+          - Name: Urgency
+            Description: Urgency level (Critical/High/Medium/Low)
+            Required: false
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            Compose a professional security notification email for {{Audience}} audience.
+            
+            Security Information:
+            {{SecurityData}}
+            
+            Urgency Level: {{Urgency}}
+            
+            The email should:
+            - Have clear, actionable subject line
+            - Provide concise summary
+            - Highlight key concerns
+            - Include specific action items if urgent
+            - Use appropriate tone for audience
+            - Be professional and clear
+            
+            Format as ready-to-send email with Subject and Body sections.
+
+      - Name: TranslateSecurityAlert
+        DisplayName: Translate Security Alert
+        Description: Translates security alerts to non-technical language
+        Inputs:
+          - Name: TechnicalAlert
+            Description: Technical security alert content
+            Required: true
+          - Name: TargetAudience
+            Description: Audience level (Executive/Manager/General Staff)
+            Required: true
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            Translate this technical security alert into clear, non-technical language for {{TargetAudience}}.
+            
+            Technical Alert:
+            {{TechnicalAlert}}
+            
+            Requirements:
+            - Remove technical jargon
+            - Explain business impact
+            - Clarify actions needed
+            - Use simple, clear language
+            - Keep it concise (3-5 sentences)

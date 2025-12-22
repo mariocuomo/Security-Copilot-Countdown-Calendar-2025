@@ -1,0 +1,92 @@
+{
+  "version": "1.0",
+  "timestamp": "2025-11-21T21:11:46.219Z",
+  "zoom": 1,
+  "pan": {
+    "x": 0,
+    "y": 0
+  },
+  "nodes": [
+    {
+      "id": "node-1763759399543",
+      "skill": {
+        "name": "Send Security Alert Email",
+        "description": "Sends email notification for critical security alerts",
+        "type": "mcp",
+        "target": "",
+        "model": "",
+        "x": 235,
+        "y": 509.66666412353516
+      },
+      "position": {
+        "x": 61,
+        "y": 410.667
+      }
+    },
+    {
+      "id": "node-1763759401032",
+      "skill": {
+        "name": "Send Incident Report",
+        "description": "Sends formatted incident report via email",
+        "type": "mcp",
+        "target": "",
+        "model": "",
+        "x": 690,
+        "y": 568.6666641235352
+      },
+      "position": {
+        "x": 428,
+        "y": 415.667
+      }
+    },
+    {
+      "id": "node-1763759466423",
+      "skill": {
+        "name": "For Each",
+        "description": "Iterate over a collection of items",
+        "type": "foreach",
+        "target": "",
+        "model": "",
+        "x": 866,
+        "y": 452.66666412353516
+      },
+      "position": {
+        "x": 788,
+        "y": 331.667
+      },
+      "foreachData": {
+        "headerValue": "For Each",
+        "children": [
+          {
+            "id": "child-1763759469650",
+            "name": "Send Incident Report",
+            "description": "Sends formatted incident report via email",
+            "type": "mcp",
+            "target": "",
+            "model": ""
+          },
+          {
+            "id": "child-1763759471572",
+            "name": "Send Security Alert Email",
+            "description": "Sends email notification for critical security alerts",
+            "type": "mcp",
+            "target": "",
+            "model": ""
+          }
+        ]
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "node-1763759399543",
+      "to": "node-1763759401032",
+      "id": "conn-1763759474417"
+    },
+    {
+      "from": "node-1763759401032",
+      "to": "node-1763759466423",
+      "id": "conn-1763759502050"
+    }
+  ]
+}

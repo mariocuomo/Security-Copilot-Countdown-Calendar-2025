@@ -1,0 +1,113 @@
+Descriptor:
+  Name: HighRiskUsers
+  DisplayName: High Risk Users Detection
+  Description: Plugin for identifying and analyzing high-risk users in the environment
+
+SkillGroups:
+  - Format: KQL
+    Skills:
+      - Name: GetHighRiskUsers
+        DisplayName: Get High Risk Users
+        Description: Retrieves users with high risk scores from Entra ID Protection
+        Inputs:
+          - Name: RiskLevel
+            Description: Minimum risk level to filter (low, medium, high)
+            Required: false
+          - Name: TimeRange
+            Description: Time range for the query (e.g., 7d, 24h, 30d)
+            Required: false
+        Settings:
+          Target: Sentinel
+          Template: |-
+            let timeRange = {{TimeRange}};
+            let riskLevel = "{{RiskLevel}}";
+            IdentityInfo
+            | where TimeGenerated > ago(timeRange)
+            | where RiskLevel == riskLevel or isempty(riskLevel)
+            | where RiskScore > 70
+            | summarize 
+                LatestRisk = max(TimeGenerated),
+                RiskEvents = count(),
+                DistinctIPs = dcount(IPAddress)
+                by UserPrincipalName, RiskLevel, RiskScore
+            | order by RiskScore desc
+            | take 100
+
+      - Name: GetUserRiskHistory
+        DisplayName: Get User Risk History
+        Description: Retrieves historical risk information for a specific user
+        Inputs:
+          - Name: UserPrincipalName
+            Description: User principal name to investigate
+            Required: true
+          - Name: Days
+            Description: Number of days to look back
+            Required: false
+        Settings:
+          Target: Sentinel
+          Template: |-
+            let upn = "{{UserPrincipalName}}";
+            let lookback = {{Days}};
+            IdentityInfo
+            | where TimeGenerated > ago(lookback)
+            | where UserPrincipalName =~ upn
+            | project TimeGenerated, RiskLevel, RiskScore, RiskState, IPAddress, Location
+            | order by TimeGenerated desc
+
+  - Format: GPT
+    Skills:
+      - Name: AnalyzeUserRiskPattern
+        DisplayName: Analyze User Risk Pattern
+        Description: Uses AI to analyze user risk patterns and provide recommendations
+        Inputs:
+          - Name: UserData
+            Description: JSON object containing user risk data
+            Required: true
+          - Name: Context
+            Description: Additional context about the user or organization
+            Required: false
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            You are a security analyst specializing in identity protection.
+            
+            Analyze the following user risk data and provide:
+            1. Key risk indicators
+            2. Potential security threats
+            3. Recommended remediation actions
+            4. Priority level (Critical/High/Medium/Low)
+            
+            User Risk Data:
+            {{UserData}}
+            
+            Additional Context:
+            {{Context}}
+            
+            Provide a structured analysis with actionable recommendations.
+
+      - Name: GenerateRiskReport
+        DisplayName: Generate Risk Report
+        Description: Generates a comprehensive risk report for high-risk users
+        Inputs:
+          - Name: HighRiskUsersList
+            Description: List of high-risk users with their data
+            Required: true
+          - Name: IncludeRecommendations
+            Description: Whether to include recommendations (true/false)
+            Required: false
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            Generate a comprehensive security report for the following high-risk users.
+            
+            Format the report with:
+            - Executive Summary
+            - High-Risk Users Overview (table format)
+            - Risk Analysis per User
+            - Common Patterns Identified
+            {{#if IncludeRecommendations}}- Recommended Actions{{/if}}
+            
+            High-Risk Users Data:
+            {{HighRiskUsersList}}
+            
+            Make the report clear, actionable, and suitable for security leadership.

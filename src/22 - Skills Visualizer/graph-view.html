@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡</text></svg>">
+    <title>Security Copilot Plugins - Graph View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background: #f0f0ff;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, width 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-300px);
+            width: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            background: #fafafa;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-weight: 600;
+        }
+
+        .file-input-label:hover {
+            background: #5568d3;
+        }
+
+        .skills-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .skills-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+            min-height: 200px;
+        }
+
+        .skills-empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .skills-empty-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .skills-empty-subtext {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .plugin-group {
+            margin-bottom: 20px;
+        }
+
+        .plugin-group-title {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .skill-node {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .skill-node:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .skill-node:active {
+            cursor: grabbing;
+        }
+
+        .skill-node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .skill-node-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .skill-node-type {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .skill-node-type.kql {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .skill-node-type.gpt {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .skill-node-type.mcp {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .skill-node-type.agent {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .skill-node-type.logicapp {
+            background: #e0f2f1;
+            color: #00695c;
+        }
+
+        .skill-node-type.foreach {
+            background: #e1f5fe;
+            color: #0277bd;
+        }
+
+        .skill-node-type.condition {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .skill-node-type.note {
+            background: #fff9c4;
+            color: #f57f17;
+        }
+
+        .skill-node-description {
+            font-size: 0.8rem;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: 
+                linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
+                linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .canvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-origin: 0 0;
+            transition: transform 0.2s ease;
+        }
+
+        .canvas-skill-node {
+            position: absolute;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 200px;
+            max-width: 300px;
+            cursor: move;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .canvas-skill-node:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+        .canvas-skill-node.connection-source {
+            border-color: #4caf50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .canvas-skill-node.connection-target {
+            border-color: #ff9800;
+            box-shadow: 0 0 20px rgba(255, 152, 0, 0.4);
+        }
+
+        .canvas-skill-node.dragging {
+            opacity: 0.8;
+            cursor: grabbing;
+        }
+
+        .canvas-skill-node.control-flow {
+            border-color: #4A90E2;
+            background: linear-gradient(to bottom, #f8f9ff 0%, white 100%);
+        }
+
+        .canvas-skill-node.control-flow.foreach {
+            border-color: #0277bd;
+        }
+
+        .canvas-skill-node.control-flow.condition {
+            border-color: #c2185b;
+        }
+
+        .canvas-skill-node.foreach-container {
+            min-width: 400px;
+            min-height: 300px;
+            border-style: dashed;
+            border-width: 3px;
+            background: linear-gradient(to bottom, #e1f5fe 0%, #f5f5f5 100%);
+            padding: 20px;
+        }
+
+        .foreach-container-header {
+            background: #0277bd;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: -20px -20px 15px -20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .foreach-drop-zone {
+            min-height: 200px;
+            border: 2px dashed #0277bd;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .foreach-drop-zone.drag-over {
+            background: rgba(2, 119, 189, 0.1);
+            border-color: #01579b;
+        }
+
+        .foreach-empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #999;
+            pointer-events: none;
+        }
+
+        .foreach-child-node {
+            position: relative;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: move;
+            transition: all 0.2s ease;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .foreach-child-node.dragging-child {
+            opacity: 0.5;
+        }
+
+        .foreach-child-node:hover {
+            border-color: #5568d3;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .foreach-insert-indicator {
+            height: 4px;
+            background: #0277bd;
+            border-radius: 2px;
+            margin: 5px 0;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .foreach-insert-indicator.active {
+            opacity: 1;
+        }
+
+        /* Condition (If/Else) Container Styles */
+        .canvas-skill-node.condition-container {
+            min-width: 550px;
+            min-height: 350px;
+            border-style: solid;
+            border-width: 3px;
+            border-color: #c2185b;
+            background: linear-gradient(to bottom, #fce4ec 0%, #f5f5f5 100%);
+            padding: 20px;
+        }
+
+        .condition-container-header {
+            background: linear-gradient(135deg, #c2185b 0%, #880e4f 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: -20px -20px 15px -20px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .condition-branches {
+            display: flex;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .condition-branch {
+            flex: 1;
+            border: 2px solid #c2185b;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .condition-branch-header {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 10px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .condition-branch.true .condition-branch-header {
+            background: #4caf50;
+        }
+
+        .condition-branch.false .condition-branch-header {
+            background: #f44336;
+        }
+
+        .condition-drop-zone {
+            flex: 1;
+            min-height: 180px;
+            border: 2px dashed #c2185b;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .condition-drop-zone.drag-over {
+            background: rgba(194, 24, 91, 0.1);
+            border-color: #880e4f;
+        }
+
+        .condition-empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #999;
+            pointer-events: none;
+            font-size: 0.85rem;
+        }
+
+        .note-container {
+            min-width: 250px;
+            max-width: 400px;
+            min-height: 150px;
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            border: 3px solid #fbc02d;
+            box-shadow: 0 4px 12px rgba(251, 192, 45, 0.3);
+            padding: 15px;
+        }
+
+        .note-container::before {
+            content: '📝';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 1.5rem;
+            opacity: 0.3;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .note-textarea {
+            width: 100%;
+            min-height: 100px;
+            resize: vertical;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 0.95rem;
+            color: #333;
+            padding: 8px;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .note-textarea::placeholder {
+            color: #999;
+            opacity: 0.6;
+        }
+
+        .canvas-skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .canvas-skill-title {
+            font-weight: 700;
+            color: #333;
+            font-size: 1rem;
+            flex: 1;
+        }
+
+        .canvas-skill-badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .canvas-skill-delete {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #f44336;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .canvas-skill-node:hover .canvas-skill-delete {
+            display: flex;
+        }
+
+        .canvas-skill-delete:hover {
+            background: #d32f2f;
+        }
+
+        .canvas-skill-description {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .canvas-skill-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .canvas-skill-meta-item {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            color: #666;
+        }
+
+        .empty-canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #999;
+        }
+
+        .empty-canvas-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .empty-canvas-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .empty-canvas-subtext {
+            font-size: 0.9rem;
+        }
+
+        .toolbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            z-index: 1000;
+        }
+
+        .toolbar-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .toolbar-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .toolbar-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 10px;
+            padding-right: 10px;
+            border-right: 2px solid #e0e0e0;
+        }
+
+        .toolbar-section:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        .zoom-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .zoom-level {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .connection-arrow {
+            position: absolute;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .connection-arrow:hover .arrow-line {
+            stroke: #f44336;
+            stroke-width: 3;
+        }
+
+        .connection-arrow:hover .arrow-head {
+            fill: #f44336;
+        }
+
+        .arrow-line {
+            stroke: #667eea;
+            stroke-width: 2;
+            fill: none;
+            transition: all 0.2s ease;
+        }
+
+        .arrow-head {
+            fill: #667eea;
+            transition: all 0.2s ease;
+        }
+
+        .connection-label {
+            position: absolute;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #666;
+            border: 1px solid #e0e0e0;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 250px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            <span>🛡️</span>
+            Security Copilot Plugins - Graph View
+        </h1>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+                ← Table View
+            </button>
+            <button class="btn" onclick="downloadGraph()">
+                💾 Download Graph
+            </button>
+            <button class="btn" onclick="document.getElementById('graphUpload').click()">
+                📤 Upload Graph
+            </button>
+            <input type="file" id="graphUpload" accept=".json" style="display: none;" onchange="uploadGraph(event)">
+            <button class="btn" onclick="clearCanvas()">
+                Clear Canvas
+            </button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Skills Library <span id="skillCount" style="font-size: 0.9rem; color: #667eea; font-weight: normal;">(0)</span></h2>
+                <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search skills or plugins...">
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" accept=".yaml,.yml" multiple>
+                    <label for="fileInput" class="file-input-label">📁 Load YAML Files</label>
+                </div>
+                <div id="loadStatus" style="margin-top: 10px; font-size: 0.85rem; color: #666;"></div>
+            </div>
+            <div class="skills-list" id="skillsList">
+                <div class="skills-empty-state">
+                    <div class="skills-empty-icon">📦</div>
+                    <div class="skills-empty-text">No Skills Loaded</div>
+                    <div class="skills-empty-subtext">Load YAML files to get started</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Hide Sidebar">✕</button>
+            <div class="toolbar">
+                <div class="toolbar-section">
+                    <button class="toolbar-btn" id="connectionModeBtn" onclick="toggleConnectionMode()">🔗 Connect Skills</button>
+                    <button class="toolbar-btn" onclick="clearConnections()">✂️ Clear Connections</button>
+                </div>
+                <div class="toolbar-section">
+                    <button class="toolbar-btn" onclick="autoArrange()">📐 Auto Arrange</button>
+                    <button class="toolbar-btn" onclick="exportAsPNG()">🖼️ Export PNG</button>
+                </div>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">+</button>
+                <div class="zoom-level" id="zoomLevel">100%</div>
+                <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+                <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom" style="font-size: 1rem;">⟲</button>
+            </div>
+            <div class="canvas" id="canvas">
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script>
+        let plugins = [];
+        let canvasNodes = [];
+        let draggedElement = null;
+        let offsetX = 0;
+        let offsetY = 0;
+        let connections = [];
+        let connectionMode = false;
+        let connectionSource = null;
+        let zoomLevel = 1;
+        let panX = 0;
+        let panY = 0;
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartY = 0;
+        let searchQuery = '';
+
+        // Load YAML files
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const loadStatus = document.getElementById('loadStatus');
+            
+            if (files.length === 0) return;
+
+            loadStatus.textContent = `Loading ${files.length} file(s)...`;
+            plugins = [];
+
+            const readPromises = Array.from(files).map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const yamlText = e.target.result;
+                            const yamlData = jsyaml.load(yamlText);
+                            resolve(parseYamlToPlugin(yamlData));
+                        } catch (error) {
+                            console.error(`Error parsing ${file.name}:`, error);
+                            reject(error);
+                        }
+                    };
+                    reader.onerror = reject;
+                    reader.readAsText(file);
+                });
+            });
+
+            Promise.all(readPromises)
+                .then(loadedPlugins => {
+                    plugins = loadedPlugins;
+                    loadStatus.textContent = `✓ Loaded ${plugins.length} plugin(s)`;
+                    renderSkillsList();
+                })
+                .catch(error => {
+                    console.error('Error loading files:', error);
+                    loadStatus.textContent = `✗ Error: ${error.message}`;
+                });
+        });
+
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            searchQuery = e.target.value.toLowerCase();
+            renderSkillsList();
+        });
+
+        // Parse YAML
+        function parseYamlToPlugin(yamlData) {
+            const descriptor = yamlData.Descriptor || {};
+            const skillGroups = yamlData.SkillGroups || [];
+            
+            return {
+                name: descriptor.Name || '',
+                displayName: descriptor.DisplayName || descriptor.Name || '',
+                skillGroups: skillGroups.map(group => ({
+                    format: group.Format || 'Unknown',
+                    skills: (group.Skills || []).map(skill => ({
+                        name: skill.Name || '',
+                        displayName: skill.DisplayName || skill.Name || '',
+                        description: skill.Description || '',
+                        settings: skill.Settings || {}
+                    }))
+                }))
+            };
+        }
+
+        // Render skills list in sidebar
+        function renderSkillsList() {
+            const skillsList = document.getElementById('skillsList');
+            
+            // Always show control flow elements first
+            let controlFlowHtml = `
+                <div class="plugin-group">
+                    <div class="plugin-group-title">🔄 Control Flow</div>
+                    <div class="skill-node control-flow-node" draggable="true" 
+                         data-skill-name="For Each"
+                         data-skill-description="Iterate over a collection of items"
+                         data-skill-type="foreach"
+                         data-skill-target=""
+                         data-skill-model="">
+                        <div class="skill-node-header">
+                            <span class="skill-node-name">For Each</span>
+                            <span class="skill-node-type foreach">LOOP</span>
+                        </div>
+                        <div class="skill-node-description">Iterate over a collection of items</div>
+                    </div>
+                    <div class="skill-node control-flow-node" draggable="true" 
+                         data-skill-name="Condition"
+                         data-skill-description="If/Else conditional branch"
+                         data-skill-type="condition"
+                         data-skill-target=""
+                         data-skill-model="">
+                        <div class="skill-node-header">
+                            <span class="skill-node-name">Condition</span>
+                            <span class="skill-node-type condition">IF/ELSE</span>
+                        </div>
+                        <div class="skill-node-description">If/Else conditional branch</div>
+                    </div>
+                    <div class="skill-node control-flow-node" draggable="true" 
+                         data-skill-name="Note"
+                         data-skill-description="Custom text annotation"
+                         data-skill-type="note"
+                         data-skill-target=""
+                         data-skill-model="">
+                        <div class="skill-node-header">
+                            <span class="skill-node-name">Note</span>
+                            <span class="skill-node-type note">NOTE</span>
+                        </div>
+                        <div class="skill-node-description">Custom text annotation</div>
+                    </div>
+                </div>
+            `;
+            
+            if (plugins.length === 0) {
+                skillsList.innerHTML = controlFlowHtml + `
+                    <div class="skills-empty-state">
+                        <div class="skills-empty-icon">📦</div>
+                        <div class="skills-empty-text">No Skills Loaded</div>
+                        <div class="skills-empty-subtext">Load YAML files to get started</div>
+                    </div>
+                `;
+                // Add drag listeners for control flow
+                document.querySelectorAll('.skill-node').forEach(node => {
+                    node.addEventListener('dragstart', handleDragStart);
+                });
+                return;
+            }
+
+            // Filter plugins and skills based on search
+            const filteredPlugins = plugins.map(plugin => {
+                const pluginMatch = plugin.name.toLowerCase().includes(searchQuery) || 
+                                   plugin.displayName.toLowerCase().includes(searchQuery);
+                
+                const filteredGroups = plugin.skillGroups.map(group => ({
+                    format: group.format,
+                    skills: group.skills.filter(skill => 
+                        searchQuery === '' || 
+                        pluginMatch ||
+                        skill.name.toLowerCase().includes(searchQuery) ||
+                        skill.displayName.toLowerCase().includes(searchQuery) ||
+                        skill.description.toLowerCase().includes(searchQuery)
+                    )
+                })).filter(group => group.skills.length > 0);
+
+                return {
+                    ...plugin,
+                    skillGroups: filteredGroups
+                };
+            }).filter(plugin => plugin.skillGroups.length > 0);
+
+            if (filteredPlugins.length === 0 && searchQuery !== '') {
+                skillsList.innerHTML = controlFlowHtml + `
+                    <div class="skills-empty-state">
+                        <div class="skills-empty-icon">🔍</div>
+                        <div class="skills-empty-text">No Results Found</div>
+                        <div class="skills-empty-subtext">Try a different search term</div>
+                    </div>
+                `;
+                // Add drag listeners for control flow
+                document.querySelectorAll('.skill-node').forEach(node => {
+                    node.addEventListener('dragstart', handleDragStart);
+                });
+                return;
+            }
+
+            skillsList.innerHTML = controlFlowHtml + filteredPlugins.map(plugin => `
+                <div class="plugin-group">
+                    <div class="plugin-group-title">${plugin.displayName || plugin.name}</div>
+                    ${plugin.skillGroups.map(group => 
+                        group.skills.map(skill => `
+                            <div class="skill-node" draggable="true" 
+                                 data-skill-name="${skill.displayName || skill.name}"
+                                 data-skill-description="${skill.description}"
+                                 data-skill-type="${group.format.toLowerCase()}"
+                                 data-skill-target="${skill.settings.Target || ''}"
+                                 data-skill-model="${skill.settings.ModelName || ''}">
+                                <div class="skill-node-header">
+                                    <span class="skill-node-name">${skill.displayName || skill.name}</span>
+                                    <span class="skill-node-type ${group.format.toLowerCase()}">${group.format}</span>
+                                </div>
+                                <div class="skill-node-description">${skill.description.substring(0, 80)}${skill.description.length > 80 ? '...' : ''}</div>
+                            </div>
+                        `).join('')
+                    ).join('')}
+                </div>
+            `).join('');
+
+            // Add drag listeners
+            document.querySelectorAll('.skill-node').forEach(node => {
+                node.addEventListener('dragstart', handleDragStart);
+            });
+        }
+
+        // Handle drag start
+        function handleDragStart(e) {
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+            e.dataTransfer.setData('skill-name', e.target.dataset.skillName);
+            e.dataTransfer.setData('skill-description', e.target.dataset.skillDescription);
+            e.dataTransfer.setData('skill-type', e.target.dataset.skillType);
+            e.dataTransfer.setData('skill-target', e.target.dataset.skillTarget);
+            e.dataTransfer.setData('skill-model', e.target.dataset.skillModel);
+        }
+
+        // Setup canvas drop zone
+        const canvas = document.getElementById('canvas');
+        
+        canvas.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+        // Zoom functions
+        function updateCanvasTransform() {
+            canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+        }
+
+        function zoomIn() {
+            if (zoomLevel < 2) {
+                zoomLevel = Math.min(2, zoomLevel + 0.1);
+                updateCanvasTransform();
+                document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+            }
+        }
+
+        function zoomOut() {
+            if (zoomLevel > 0.3) {
+                zoomLevel = Math.max(0.3, zoomLevel - 0.1);
+                updateCanvasTransform();
+                document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+            }
+        }
+
+        function resetZoom() {
+            zoomLevel = 1;
+            panX = 0;
+            panY = 0;
+            updateCanvasTransform();
+            document.getElementById('zoomLevel').textContent = '100%';
+        }
+
+        // Toggle sidebar visibility
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            sidebar.classList.toggle('collapsed');
+            
+            // Update button icon
+            if (sidebar.classList.contains('collapsed')) {
+                toggleBtn.textContent = '☰';
+                toggleBtn.title = 'Show Sidebar';
+            } else {
+                toggleBtn.textContent = '✕';
+                toggleBtn.title = 'Hide Sidebar';
+            }
+        }
+
+        // Mouse wheel zoom
+        canvas.parentElement.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.05 : 0.05;
+            const newZoom = Math.min(2, Math.max(0.3, zoomLevel + delta));
+            
+            if (newZoom !== zoomLevel) {
+                zoomLevel = newZoom;
+                updateCanvasTransform();
+                document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+            }
+        }, { passive: false });
+
+        // Pan with middle mouse or space + drag
+        canvas.parentElement.addEventListener('mousedown', function(e) {
+            if (e.button === 1 || (e.button === 0 && e.shiftKey) || e.button === 0) {
+                // Allow panning with left click when not clicking on a node
+                if (e.target === canvas || e.target.classList.contains('canvas-container')) {
+                    isPanning = true;
+                    panStartX = e.clientX - panX;
+                    panStartY = e.clientY - panY;
+                    canvas.style.cursor = 'grab';
+                    e.preventDefault();
+                }
+            }
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isPanning) {
+                panX = e.clientX - panStartX;
+                panY = e.clientY - panStartY;
+                updateCanvasTransform();
+                canvas.style.cursor = 'grabbing';
+            }
+        });
+
+        document.addEventListener('mouseup', function(e) {
+            if (isPanning) {
+                isPanning = false;
+                canvas.style.cursor = '';
+            }
+        });
+
+        canvas.addEventListener('drop', function(e) {
+            e.preventDefault();
+            
+            // Check if this is a child being reordered within a For Each container
+            const childId = e.dataTransfer.getData('child-id');
+            if (childId) {
+                // This is a child node being dragged, don't add to canvas
+                return;
+            }
+            
+            const skillName = e.dataTransfer.getData('skill-name');
+            const skillDescription = e.dataTransfer.getData('skill-description');
+            const skillType = e.dataTransfer.getData('skill-type');
+            const skillTarget = e.dataTransfer.getData('skill-target');
+            const skillModel = e.dataTransfer.getData('skill-model');
+            
+            // Only add if we have skill data (from sidebar)
+            if (!skillName) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            addSkillToCanvas({
+                name: skillName,
+                description: skillDescription,
+                type: skillType,
+                target: skillTarget,
+                model: skillModel,
+                x: x,
+                y: y
+            });
+        });
+
+        // Add skill to canvas
+        function addSkillToCanvas(skill, existingNodeId = null) {
+            const nodeId = existingNodeId || `node-${Date.now()}`;
+            const node = document.createElement('div');
+            node.className = 'canvas-skill-node';
+            
+            // Add control flow class if applicable
+            if (skill.type === 'foreach' || skill.type === 'condition') {
+                node.classList.add('control-flow', skill.type);
+            }
+            
+            node.id = nodeId;
+            node.style.left = skill.x + 'px';
+            node.style.top = skill.y + 'px';
+
+            const metaItems = [];
+            if (skill.target) metaItems.push(`<span class="canvas-skill-meta-item">Target: ${skill.target}</span>`);
+            if (skill.model) metaItems.push(`<span class="canvas-skill-meta-item">Model: ${skill.model}</span>`);
+
+            // Special rendering for control flow nodes
+            if (skill.type === 'note') {
+                node.classList.add('note-container');
+                node.innerHTML = `
+                    <button class="canvas-skill-delete" onclick="removeNode('${nodeId}')" style="top: 10px; right: 10px;">×</button>
+                    <textarea class="note-textarea" placeholder="Type your note here..." onclick="event.stopPropagation()" onmousedown="event.stopPropagation()"></textarea>
+                `;
+            } else if (skill.type === 'foreach') {
+                node.classList.add('foreach-container');
+                node.innerHTML = `
+                    <button class="canvas-skill-delete" onclick="removeNode('${nodeId}')">×</button>
+                    <div class="foreach-container-header">
+                        <span style="font-size: 1.1rem;">🔄 For Each - <input type="text" value="For Each" 
+                            style="background: transparent; border: none; border-bottom: 2px solid white; color: white; font-weight: 600; width: 180px; padding: 4px 8px; outline: none; font-size: 1.1rem;" 
+                            placeholder="Enter item type..."
+                            onclick="event.stopPropagation();"
+                            onmousedown="event.stopPropagation();"></span>
+                    </div>
+                    <div class="foreach-drop-zone" data-container-id="${nodeId}">
+                        <div class="foreach-empty-state">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">📥</div>
+                            <div style="font-weight: 600; margin-bottom: 5px;">Drop Skills Here</div>
+                            <div style="font-size: 0.85rem;">Drag skills into this loop</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Setup drop zone after adding to DOM
+                setTimeout(() => setupForEachDropZone(nodeId), 0);
+            } else if (skill.type === 'condition') {
+                node.classList.add('condition-container');
+                node.innerHTML = `
+                    <button class="canvas-skill-delete" onclick="removeNode('${nodeId}')">×</button>
+                    <div class="condition-container-header">
+                        <span style="font-size: 1.1rem;">⚡ Condition - <input type="text" value="condition" 
+                            style="background: transparent; border: none; border-bottom: 2px solid white; color: white; font-weight: 600; width: 180px; padding: 4px 8px; outline: none; font-size: 1.1rem;" 
+                            placeholder="Enter condition..."
+                            onclick="event.stopPropagation();"
+                            onmousedown="event.stopPropagation();"></span>
+                    </div>
+                    <div class="condition-branches">
+                        <div class="condition-branch true">
+                            <div class="condition-branch-header">
+                                <span>✓</span>
+                                <span>True</span>
+                                <button onclick="event.stopPropagation();" style="margin-left: auto; background: rgba(255,255,255,0.3); border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white;">▲</button>
+                            </div>
+                            <div class="condition-drop-zone" data-container-id="${nodeId}" data-branch="true">
+                                <div class="condition-empty-state">
+                                    <div style="font-size: 1.5rem; margin-bottom: 5px;">📥</div>
+                                    <div>Drop skills here</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="condition-branch false">
+                            <div class="condition-branch-header">
+                                <span>✗</span>
+                                <span>False</span>
+                                <button onclick="event.stopPropagation();" style="margin-left: auto; background: rgba(255,255,255,0.3); border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white;">▲</button>
+                            </div>
+                            <div class="condition-drop-zone" data-container-id="${nodeId}" data-branch="false">
+                                <div class="condition-empty-state">
+                                    <div style="font-size: 1.5rem; margin-bottom: 5px;">📥</div>
+                                    <div>Drop skills here</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Setup drop zones after adding to DOM
+                setTimeout(() => setupConditionDropZones(nodeId), 0);
+            } else {
+                node.innerHTML = `
+                    <button class="canvas-skill-delete" onclick="removeNode('${nodeId}')">×</button>
+                    <div class="canvas-skill-header">
+                        <div class="canvas-skill-title">${skill.name}</div>
+                        <span class="canvas-skill-badge skill-node-type ${skill.type}">${skill.type.toUpperCase()}</span>
+                    </div>
+                    <div class="canvas-skill-description">${skill.description}</div>
+                    ${metaItems.length > 0 ? `<div class="canvas-skill-meta">${metaItems.join('')}</div>` : ''}
+                `;
+            }
+
+            canvas.appendChild(node);
+            canvasNodes.push({ id: nodeId, skill: skill });
+
+            // Make node draggable on canvas
+            makeNodeDraggable(node);
+        }
+
+        // Make node draggable within canvas
+        function makeNodeDraggable(node) {
+            node.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('canvas-skill-delete')) return;
+                
+                // Prevent dragging if clicking on child nodes inside For Each container
+                if (e.target.closest('.foreach-child-node')) return;
+                
+                // Prevent dragging if clicking on input field
+                if (e.target.tagName === 'INPUT') return;
+                
+                // Prevent dragging if clicking inside drop zone (but not on the container itself)
+                if (e.target.classList.contains('foreach-drop-zone') || 
+                    e.target.classList.contains('foreach-empty-state') ||
+                    e.target.closest('.foreach-empty-state')) {
+                    return;
+                }
+                
+                // Handle connection mode
+                if (connectionMode) {
+                    handleConnectionClick(node);
+                    e.preventDefault();
+                    return;
+                }
+                
+                draggedElement = node;
+                const rect = node.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                // Calculate offset in canvas space (accounting for zoom and pan)
+                const nodeX = parseFloat(node.style.left) || 0;
+                const nodeY = parseFloat(node.style.top) || 0;
+                offsetX = (e.clientX - canvasRect.left - panX) / zoomLevel - nodeX;
+                offsetY = (e.clientY - canvasRect.top - panY) / zoomLevel - nodeY;
+                
+                node.classList.add('dragging');
+                e.preventDefault();
+            });
+        }
+
+        document.addEventListener('mousemove', function(e) {
+            if (draggedElement) {
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                // Account for zoom and pan transforms
+                // Convert mouse position from screen space to canvas space
+                const x = (e.clientX - canvasRect.left - panX) / zoomLevel - offsetX;
+                const y = (e.clientY - canvasRect.top - panY) / zoomLevel - offsetY;
+                
+                // Set position without constraints (allow free movement)
+                draggedElement.style.left = x + 'px';
+                draggedElement.style.top = y + 'px';
+                redrawConnections();
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement = null;
+            }
+        });
+
+        // Remove node
+        function removeNode(nodeId) {
+            const node = document.getElementById(nodeId);
+            if (node) {
+                node.remove();
+                canvasNodes = canvasNodes.filter(n => n.id !== nodeId);
+                
+                if (canvasNodes.length === 0) {
+                    connections = [];
+                    canvas.innerHTML = '';
+                } else {
+                    connections = connections.filter(c => c.from !== nodeId && c.to !== nodeId);
+                    redrawConnections();
+                }
+            }
+        }
+
+        // Clear canvas
+        function clearCanvas() {
+            if (canvasNodes.length === 0) return;
+            
+            if (confirm('Are you sure you want to clear the canvas?')) {
+                canvasNodes = [];
+                connections = [];
+                canvas.innerHTML = '';
+            }
+        }
+
+        // Download graph as JSON
+        function downloadGraph() {
+            if (canvasNodes.length === 0) {
+                alert('Canvas is empty. Add some skills first!');
+                return;
+            }
+
+            const defaultName = `security-copilot-graph-${new Date().toISOString().split('T')[0]}`;
+            const fileName = prompt('Enter a name for your graph:', defaultName);
+            
+            if (!fileName || fileName.trim() === '') {
+                return; // User cancelled or entered empty name
+            }
+
+            const graphData = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                zoom: zoomLevel,
+                pan: { x: panX, y: panY },
+                nodes: canvasNodes.map(node => {
+                    const element = document.getElementById(node.id);
+                    const nodeData = {
+                        id: node.id,
+                        skill: node.skill,
+                        position: {
+                            x: parseFloat(element.style.left) || 0,
+                            y: parseFloat(element.style.top) || 0
+                        }
+                    };
+
+                    // If it's a foreach container, save children
+                    if (node.skill.type === 'foreach') {
+                        const dropZone = element.querySelector('.foreach-drop-zone');
+                        const headerInput = element.querySelector('.foreach-container-header input');
+                        const children = Array.from(dropZone.querySelectorAll('.foreach-child-node')).map(child => ({
+                            id: child.id,
+                            name: child.querySelector('.canvas-skill-title').textContent,
+                            description: child.querySelector('.canvas-skill-description').textContent,
+                            type: child.querySelector('.canvas-skill-badge').textContent.toLowerCase(),
+                            target: child.querySelector('.canvas-skill-meta-item')?.textContent.replace('Target: ', '') || '',
+                            model: child.querySelectorAll('.canvas-skill-meta-item')[1]?.textContent.replace('Model: ', '') || ''
+                        }));
+                        nodeData.foreachData = {
+                            headerValue: headerInput?.value || 'For Each',
+                            children: children
+                        };
+                    }
+
+                    // If it's a condition container, save branches
+                    if (node.skill.type === 'condition') {
+                        const headerInput = element.querySelector('.condition-container-header input');
+                        const trueBranch = element.querySelector('.condition-branch.true .condition-drop-zone');
+                        const falseBranch = element.querySelector('.condition-branch.false .condition-drop-zone');
+                        
+                        const getTrueChildren = () => Array.from(trueBranch.querySelectorAll('.foreach-child-node')).map(child => ({
+                            id: child.id,
+                            name: child.querySelector('.canvas-skill-title').textContent,
+                            description: child.querySelector('.canvas-skill-description').textContent,
+                            type: child.querySelector('.canvas-skill-badge').textContent.toLowerCase(),
+                            target: child.querySelector('.canvas-skill-meta-item')?.textContent.replace('Target: ', '') || '',
+                            model: child.querySelectorAll('.canvas-skill-meta-item')[1]?.textContent.replace('Model: ', '') || ''
+                        }));
+                        
+                        const getFalseChildren = () => Array.from(falseBranch.querySelectorAll('.foreach-child-node')).map(child => ({
+                            id: child.id,
+                            name: child.querySelector('.canvas-skill-title').textContent,
+                            description: child.querySelector('.canvas-skill-description').textContent,
+                            type: child.querySelector('.canvas-skill-badge').textContent.toLowerCase(),
+                            target: child.querySelector('.canvas-skill-meta-item')?.textContent.replace('Target: ', '') || '',
+                            model: child.querySelectorAll('.canvas-skill-meta-item')[1]?.textContent.replace('Model: ', '') || ''
+                        }));
+                        
+                        nodeData.conditionData = {
+                            headerValue: headerInput?.value || 'condition',
+                            trueBranch: getTrueChildren(),
+                            falseBranch: getFalseChildren()
+                        };
+                    }
+
+                    // If it's a note, save textarea content
+                    if (node.skill.type === 'note') {
+                        const textarea = element.querySelector('.note-textarea');
+                        nodeData.noteContent = textarea?.value || '';
+                    }
+
+                    return nodeData;
+                }),
+                connections: connections
+            };
+
+            const blob = new Blob([JSON.stringify(graphData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${fileName.replace(/\.json$/i, '')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Upload and restore graph from JSON
+        function uploadGraph(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const graphData = JSON.parse(e.target.result);
+                    
+                    // Validate structure
+                    if (!graphData.nodes || !graphData.connections) {
+                        alert('Invalid graph file format');
+                        return;
+                    }
+
+                    // Clear existing canvas
+                    canvasNodes = [];
+                    connections = [];
+                    canvas.innerHTML = '';
+
+                    // Restore zoom and pan
+                    if (graphData.zoom) {
+                        zoomLevel = graphData.zoom;
+                        document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+                    }
+                    if (graphData.pan) {
+                        panX = graphData.pan.x;
+                        panY = graphData.pan.y;
+                    }
+                    updateCanvasTransform();
+
+                    // Restore nodes
+                    graphData.nodes.forEach(nodeData => {
+                        const skill = nodeData.skill;
+                        skill.x = nodeData.position.x;
+                        skill.y = nodeData.position.y;
+                        
+                        // Pass the original node ID to preserve it
+                        addSkillToCanvas(skill, nodeData.id);
+                    });
+
+                    // Wait for nodes to be added to DOM before restoring children and connections
+                    setTimeout(() => {
+                        graphData.nodes.forEach(nodeData => {
+                            // Restore foreach children if applicable
+                            if (nodeData.foreachData) {
+                                const container = document.getElementById(nodeData.id);
+                                if (!container) return;
+                                
+                                const headerInput = container.querySelector('.foreach-container-header input');
+                                if (headerInput) {
+                                    headerInput.value = nodeData.foreachData.headerValue;
+                                }
+                                
+                                nodeData.foreachData.children.forEach(child => {
+                                    addSkillToForEachContainer(nodeData.id, {
+                                        name: child.name,
+                                        description: child.description,
+                                        type: child.type,
+                                        target: child.target,
+                                        model: child.model
+                                    });
+                                });
+                            }
+
+                            // Restore condition branches if applicable
+                            if (nodeData.conditionData) {
+                                const container = document.getElementById(nodeData.id);
+                                if (!container) return;
+                                
+                                const headerInput = container.querySelector('.condition-container-header input');
+                                if (headerInput) {
+                                    headerInput.value = nodeData.conditionData.headerValue;
+                                }
+                                
+                                nodeData.conditionData.trueBranch.forEach(child => {
+                                    addSkillToConditionBranch(nodeData.id, 'true', {
+                                        name: child.name,
+                                        description: child.description,
+                                        type: child.type,
+                                        target: child.target,
+                                        model: child.model
+                                    });
+                                });
+                                
+                                nodeData.conditionData.falseBranch.forEach(child => {
+                                    addSkillToConditionBranch(nodeData.id, 'false', {
+                                        name: child.name,
+                                        description: child.description,
+                                        type: child.type,
+                                        target: child.target,
+                                        model: child.model
+                                    });
+                                });
+                            }
+
+                            // Restore note content if applicable
+                            if (nodeData.noteContent !== undefined) {
+                                const container = document.getElementById(nodeData.id);
+                                if (!container) return;
+                                
+                                const textarea = container.querySelector('.note-textarea');
+                                if (textarea) {
+                                    textarea.value = nodeData.noteContent;
+                                }
+                            }
+                        });
+
+                        // Restore connections after nodes are fully set up
+                        connections = graphData.connections;
+                        redrawConnections();
+
+                        alert('Graph loaded successfully!');
+                    }, 100);
+                } catch (error) {
+                    console.error('Error loading graph:', error);
+                    alert('Error loading graph: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // Setup drop zone for For Each container
+        function setupForEachDropZone(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const dropZone = container.querySelector('.foreach-drop-zone');
+            if (!dropZone) return;
+            
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('drag-over');
+            });
+            
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+            });
+            
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+                
+                // Check if this is a child being reordered
+                const childId = e.dataTransfer.getData('child-id');
+                if (childId) {
+                    // This is just reordering, don't create new node
+                    return;
+                }
+                
+                const skillName = e.dataTransfer.getData('skill-name');
+                const skillDescription = e.dataTransfer.getData('skill-description');
+                const skillType = e.dataTransfer.getData('skill-type');
+                const skillTarget = e.dataTransfer.getData('skill-target');
+                const skillModel = e.dataTransfer.getData('skill-model');
+                
+                // Only add if we have skill data (from sidebar)
+                if (!skillName) return;
+                
+                // Create child node inside the container
+                addSkillToForEachContainer(containerId, {
+                    name: skillName,
+                    description: skillDescription,
+                    type: skillType,
+                    target: skillTarget,
+                    model: skillModel
+                });
+            });
+        }
+        
+        // Add skill to For Each container
+        function addSkillToForEachContainer(containerId, skill) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const dropZone = container.querySelector('.foreach-drop-zone');
+            if (!dropZone) return;
+            
+            // Hide empty state if this is first child
+            const emptyState = dropZone.querySelector('.foreach-empty-state');
+            if (emptyState && dropZone.querySelectorAll('.foreach-child-node').length === 0) {
+                emptyState.style.display = 'none';
+            }
+            
+            const childId = `child-${Date.now()}`;
+            const childNode = document.createElement('div');
+            childNode.className = 'foreach-child-node';
+            childNode.id = childId;
+            
+            const metaItems = [];
+            if (skill.target) metaItems.push(`<span class="canvas-skill-meta-item">Target: ${skill.target}</span>`);
+            if (skill.model) metaItems.push(`<span class="canvas-skill-meta-item">Model: ${skill.model}</span>`);
+            
+            childNode.innerHTML = `
+                <button class="canvas-skill-delete" onclick="removeForEachChild('${containerId}', '${childId}')" style="position: absolute; top: 5px; right: 5px; display: flex;">×</button>
+                <div class="canvas-skill-header">
+                    <div class="canvas-skill-title">${skill.name}</div>
+                    <span class="canvas-skill-badge skill-node-type ${skill.type}">${skill.type.toUpperCase()}</span>
+                </div>
+                <div class="canvas-skill-description" style="font-size: 0.85rem;">${skill.description}</div>
+                ${metaItems.length > 0 ? `<div class="canvas-skill-meta">${metaItems.join('')}</div>` : ''}
+            `;
+            
+            // Make child draggable for reordering
+            childNode.draggable = true;
+            
+            // Stop all mouse events from propagating to parent
+            childNode.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+            });
+            
+            childNode.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            childNode.addEventListener('dragstart', function(e) {
+                e.stopPropagation();
+                childNode.classList.add('dragging-child');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('child-id', childId);
+                e.dataTransfer.setData('container-id', containerId);
+            });
+            
+            childNode.addEventListener('dragend', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                childNode.classList.remove('dragging-child');
+            });
+            
+            childNode.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                // Prevent any drop handling on child nodes
+            });
+            
+            childNode.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const draggingChild = dropZone.querySelector('.dragging-child');
+                if (!draggingChild || draggingChild === childNode) return;
+                
+                const rect = childNode.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                // Check if we need to move the element
+                const afterElement = e.clientY >= midpoint;
+                const nextElement = afterElement ? childNode.nextSibling : childNode;
+                
+                // Only insert if not already in the correct position
+                if (draggingChild.nextSibling !== nextElement) {
+                    dropZone.insertBefore(draggingChild, nextElement);
+                }
+            });
+            
+            dropZone.appendChild(childNode);
+        }
+        
+        // Remove child from For Each container
+        function removeForEachChild(containerId, childId) {
+            const child = document.getElementById(childId);
+            if (child) {
+                child.remove();
+                
+                // Show empty state if no more children
+                const container = document.getElementById(containerId);
+                if (container) {
+                    const dropZone = container.querySelector('.foreach-drop-zone');
+                    if (dropZone && dropZone.querySelectorAll('.foreach-child-node').length === 0) {
+                        const emptyState = dropZone.querySelector('.foreach-empty-state');
+                        if (emptyState) emptyState.style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        // Setup drop zones for Condition container
+        function setupConditionDropZones(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const dropZones = container.querySelectorAll('.condition-drop-zone');
+            dropZones.forEach(dropZone => {
+                const branch = dropZone.dataset.branch;
+                
+                dropZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('drag-over');
+                });
+                
+                dropZone.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('drag-over');
+                });
+                
+                dropZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('drag-over');
+                    
+                    // Check if this is a child being reordered
+                    const childId = e.dataTransfer.getData('child-id');
+                    if (childId) {
+                        return;
+                    }
+                    
+                    const skillName = e.dataTransfer.getData('skill-name');
+                    const skillDescription = e.dataTransfer.getData('skill-description');
+                    const skillType = e.dataTransfer.getData('skill-type');
+                    const skillTarget = e.dataTransfer.getData('skill-target');
+                    const skillModel = e.dataTransfer.getData('skill-model');
+                    
+                    if (!skillName) return;
+                    
+                    addSkillToConditionBranch(containerId, branch, {
+                        name: skillName,
+                        description: skillDescription,
+                        type: skillType,
+                        target: skillTarget,
+                        model: skillModel
+                    });
+                });
+            });
+        }
+
+        // Add skill to Condition branch
+        function addSkillToConditionBranch(containerId, branch, skill) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const dropZone = container.querySelector(`.condition-drop-zone[data-branch="${branch}"]`);
+            if (!dropZone) return;
+            
+            // Hide empty state if this is first child
+            const emptyState = dropZone.querySelector('.condition-empty-state');
+            if (emptyState && dropZone.querySelectorAll('.foreach-child-node').length === 0) {
+                emptyState.style.display = 'none';
+            }
+            
+            const childId = `child-${Date.now()}`;
+            const childNode = document.createElement('div');
+            childNode.className = 'foreach-child-node';
+            childNode.id = childId;
+            
+            const metaItems = [];
+            if (skill.target) metaItems.push(`<span class="canvas-skill-meta-item">Target: ${skill.target}</span>`);
+            if (skill.model) metaItems.push(`<span class="canvas-skill-meta-item">Model: ${skill.model}</span>`);
+            
+            childNode.innerHTML = `
+                <button class="canvas-skill-delete" onclick="removeConditionChild('${containerId}', '${branch}', '${childId}')" style="position: absolute; top: 5px; right: 5px; display: flex;">×</button>
+                <div class="canvas-skill-header">
+                    <div class="canvas-skill-title">${skill.name}</div>
+                    <span class="canvas-skill-badge skill-node-type ${skill.type}">${skill.type.toUpperCase()}</span>
+                </div>
+                <div class="canvas-skill-description" style="font-size: 0.85rem;">${skill.description}</div>
+                ${metaItems.length > 0 ? `<div class="canvas-skill-meta">${metaItems.join('')}</div>` : ''}
+            `;
+            
+            // Make child draggable for reordering
+            childNode.draggable = true;
+            
+            childNode.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+            });
+            
+            childNode.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            childNode.addEventListener('dragstart', function(e) {
+                e.stopPropagation();
+                childNode.classList.add('dragging-child');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('child-id', childId);
+                e.dataTransfer.setData('container-id', containerId);
+            });
+            
+            childNode.addEventListener('dragend', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                childNode.classList.remove('dragging-child');
+            });
+            
+            childNode.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            
+            childNode.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const draggingChild = dropZone.querySelector('.dragging-child');
+                if (!draggingChild || draggingChild === childNode) return;
+                
+                const rect = childNode.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                const afterElement = e.clientY >= midpoint;
+                const nextElement = afterElement ? childNode.nextSibling : childNode;
+                
+                if (draggingChild.nextSibling !== nextElement) {
+                    dropZone.insertBefore(draggingChild, nextElement);
+                }
+            });
+            
+            dropZone.appendChild(childNode);
+        }
+
+        // Remove child from Condition branch
+        function removeConditionChild(containerId, branch, childId) {
+            const child = document.getElementById(childId);
+            if (child) {
+                child.remove();
+                
+                const container = document.getElementById(containerId);
+                if (container) {
+                    const dropZone = container.querySelector(`.condition-drop-zone[data-branch="${branch}"]`);
+                    if (dropZone && dropZone.querySelectorAll('.foreach-child-node').length === 0) {
+                        const emptyState = dropZone.querySelector('.condition-empty-state');
+                        if (emptyState) emptyState.style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        // Auto arrange nodes
+        function autoArrange() {
+            if (canvasNodes.length === 0) return;
+
+            const nodeWidth = 250;
+            const nodeHeight = 180;
+            const horizontalGap = 200;
+            const verticalGap = 120;
+            
+            // Build adjacency map from connections
+            const adjacencyMap = new Map();
+            const inDegree = new Map();
+            
+            canvasNodes.forEach(n => {
+                adjacencyMap.set(n.id, []);
+                inDegree.set(n.id, 0);
+            });
+            
+            connections.forEach(conn => {
+                if (adjacencyMap.has(conn.from)) {
+                    adjacencyMap.get(conn.from).push(conn.to);
+                }
+                if (inDegree.has(conn.to)) {
+                    inDegree.set(conn.to, inDegree.get(conn.to) + 1);
+                }
+            });
+            
+            // Topological sort to determine levels
+            const nodeLevel = new Map();
+            const queue = [];
+            
+            // Find nodes with no incoming connections (start nodes)
+            canvasNodes.forEach(n => {
+                if (inDegree.get(n.id) === 0) {
+                    queue.push(n.id);
+                    nodeLevel.set(n.id, 0);
+                }
+            });
+            
+            // If no start nodes, arrange horizontally in a single row
+            if (queue.length === 0) {
+                const startX = 100;
+                const startY = 300;
+                
+                canvasNodes.forEach((nodeData, index) => {
+                    const node = document.getElementById(nodeData.id);
+                    if (node) {
+                        node.style.left = (startX + index * (nodeWidth + horizontalGap)) + 'px';
+                        node.style.top = startY + 'px';
+                    }
+                });
+            } else {
+                // BFS to assign levels
+                const visited = new Set();
+                while (queue.length > 0) {
+                    const nodeId = queue.shift();
+                    if (visited.has(nodeId)) continue;
+                    visited.add(nodeId);
+                    
+                    const currentLevel = nodeLevel.get(nodeId);
+                    const neighbors = adjacencyMap.get(nodeId) || [];
+                    
+                    neighbors.forEach(neighborId => {
+                        const newLevel = currentLevel + 1;
+                        if (!nodeLevel.has(neighborId) || nodeLevel.get(neighborId) < newLevel) {
+                            nodeLevel.set(neighborId, newLevel);
+                        }
+                        queue.push(neighborId);
+                    });
+                }
+                
+                // Assign unvisited nodes to level 0
+                canvasNodes.forEach(n => {
+                    if (!nodeLevel.has(n.id)) {
+                        nodeLevel.set(n.id, 0);
+                    }
+                });
+                
+                // Group nodes by level
+                const levelGroups = new Map();
+                canvasNodes.forEach(n => {
+                    const level = nodeLevel.get(n.id);
+                    if (!levelGroups.has(level)) {
+                        levelGroups.set(level, []);
+                    }
+                    levelGroups.get(level).push(n);
+                });
+                
+                // Position nodes - prioritize horizontal layout
+                const startX = 100;
+                const startY = 300;
+                
+                Array.from(levelGroups.keys()).sort((a, b) => a - b).forEach(level => {
+                    const nodesInLevel = levelGroups.get(level);
+                    
+                    nodesInLevel.forEach((nodeData, index) => {
+                        const node = document.getElementById(nodeData.id);
+                        if (node) {
+                            const x = startX + level * (nodeWidth + horizontalGap);
+                            const y = startY + index * (nodeHeight + verticalGap);
+                            
+                            node.style.left = x + 'px';
+                            node.style.top = y + 'px';
+                        }
+                    });
+                });
+            }
+            
+            // Calculate zoom to fit entire diagram
+            setTimeout(() => {
+                redrawConnections();
+                
+                // Find bounds of all nodes
+                let minNodeX = Infinity, minNodeY = Infinity, maxNodeX = 0, maxNodeY = 0;
+                
+                canvasNodes.forEach(nodeData => {
+                    const node = document.getElementById(nodeData.id);
+                    if (node) {
+                        const x = parseInt(node.style.left);
+                        const y = parseInt(node.style.top);
+                        const width = node.offsetWidth;
+                        const height = node.offsetHeight;
+                        
+                        minNodeX = Math.min(minNodeX, x);
+                        minNodeY = Math.min(minNodeY, y);
+                        maxNodeX = Math.max(maxNodeX, x + width);
+                        maxNodeY = Math.max(maxNodeY, y + height);
+                    }
+                });
+                
+                // Add padding
+                const padding = 100;
+                const diagramWidth = maxNodeX - minNodeX + padding * 2;
+                const diagramHeight = maxNodeY - minNodeY + padding * 2;
+                
+                // Calculate zoom to fit
+                const canvasContainer = canvas.parentElement;
+                const containerWidth = canvasContainer.offsetWidth;
+                const containerHeight = canvasContainer.offsetHeight;
+                
+                const zoomX = containerWidth / diagramWidth;
+                const zoomY = containerHeight / diagramHeight;
+                const optimalZoom = Math.min(zoomX, zoomY, 1.5); // Cap at 150% to avoid too much zoom
+                
+                // Apply zoom
+                zoomLevel = Math.max(0.3, Math.min(2, optimalZoom));
+                
+                // Center the diagram
+                const scaledDiagramWidth = diagramWidth * zoomLevel;
+                const scaledDiagramHeight = diagramHeight * zoomLevel;
+                panX = (containerWidth - scaledDiagramWidth) / 2 + (padding - minNodeX) * zoomLevel;
+                panY = (containerHeight - scaledDiagramHeight) / 2 + (padding - minNodeY) * zoomLevel;
+                
+                updateCanvasTransform();
+                document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+            }, 50);
+        }
+
+        // Toggle connection mode
+        function toggleConnectionMode() {
+            connectionMode = !connectionMode;
+            const btn = document.getElementById('connectionModeBtn');
+            
+            if (connectionMode) {
+                btn.classList.add('active');
+                btn.textContent = '✓ Connecting...';
+                canvas.style.cursor = 'crosshair';
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '🔗 Connect Skills';
+                canvas.style.cursor = 'default';
+                if (connectionSource) {
+                    connectionSource.classList.remove('connection-source');
+                    connectionSource = null;
+                }
+            }
+        }
+
+        // Handle connection click
+        // Handle connection click
+        function handleConnectionClick(node) {
+            if (!connectionSource) {
+                connectionSource = node;
+                node.classList.add('connection-source');
+            } else {
+                // Prevent self-connections
+                if (connectionSource === node) {
+                    connectionSource.classList.remove('connection-source');
+                    connectionSource = null;
+                    return;
+                }
+                
+                // Check if connection already exists in this direction
+                const existingConnection = connections.find(c => 
+                    c.from === connectionSource.id && c.to === node.id
+                );
+                
+                if (existingConnection) {
+                    alert('Connection already exists between these skills!');
+                    connectionSource.classList.remove('connection-source');
+                    connectionSource = null;
+                    return;
+                }
+                
+                node.classList.add('connection-target');
+                setTimeout(() => node.classList.remove('connection-target'), 500);
+                
+                connections.push({
+                    from: connectionSource.id,
+                    to: node.id,
+                    id: `conn-${Date.now()}`
+                });
+                
+                connectionSource.classList.remove('connection-source');
+                connectionSource = null;
+                redrawConnections();
+            }
+        }
+
+        // Redraw all connections
+        function redrawConnections() {
+            document.querySelectorAll('.connection-arrow, .connection-label').forEach(el => el.remove());
+            
+            // Group connections by node pairs to detect bidirectional connections
+            const drawnConnections = new Set();
+            
+            connections.forEach(conn => {
+                // Check if reverse connection exists
+                const reverseConn = connections.find(c => 
+                    c.from === conn.to && c.to === conn.from
+                );
+                
+                const isBidirectional = reverseConn !== undefined;
+                const key = isBidirectional ? 
+                    `${Math.min(conn.from, conn.to)}-${Math.max(conn.from, conn.to)}` : 
+                    `${conn.from}-${conn.to}`;
+                
+                // Skip if we already drew this pair
+                if (drawnConnections.has(key)) return;
+                drawnConnections.add(key);
+                
+                const fromNode = document.getElementById(conn.from);
+                const toNode = document.getElementById(conn.to);
+                
+                if (!fromNode || !toNode) return;
+                
+                if (isBidirectional) {
+                    // Draw both directions with offset
+                    drawConnectionBetweenNodes(fromNode, toNode, conn.id, 'top');
+                    drawConnectionBetweenNodes(toNode, fromNode, reverseConn.id, 'bottom');
+                } else {
+                    // Draw single direction
+                    drawConnectionBetweenNodes(fromNode, toNode, conn.id, 'center');
+                }
+            });
+        }
+        
+        // Draw connection between nodes with offset for bidirectional
+        function drawConnectionBetweenNodes(fromNode, toNode, connId, position) {
+            // Calculate positions at edge of boxes
+            const fromLeft = parseInt(fromNode.style.left);
+            const fromTop = parseInt(fromNode.style.top);
+            const fromWidth = fromNode.offsetWidth;
+            const fromHeight = fromNode.offsetHeight;
+            
+            const toLeft = parseInt(toNode.style.left);
+            const toTop = parseInt(toNode.style.top);
+            const toWidth = toNode.offsetWidth;
+            const toHeight = toNode.offsetHeight;
+            
+            // Calculate center points
+            const fromCenterX = fromLeft + fromWidth / 2;
+            const fromCenterY = fromTop + fromHeight / 2;
+            const toCenterX = toLeft + toWidth / 2;
+            const toCenterY = toTop + toHeight / 2;
+            
+            // Calculate angle between centers
+            const angle = Math.atan2(toCenterY - fromCenterY, toCenterX - fromCenterX);
+            
+            // Apply offset for bidirectional connections
+            const offset = position === 'top' ? -15 : position === 'bottom' ? 15 : 0;
+            const perpAngle = angle + Math.PI / 2;
+            const offsetX = Math.cos(perpAngle) * offset;
+            const offsetY = Math.sin(perpAngle) * offset;
+            
+            // Calculate edge points based on angle
+            let fromX, fromY, toX, toY;
+            
+            // From node edge point
+            if (Math.abs(Math.cos(angle)) > Math.abs(Math.sin(angle))) {
+                // More horizontal - use left or right edge
+                if (Math.cos(angle) > 0) {
+                    fromX = fromLeft + fromWidth + offsetX;
+                    fromY = fromCenterY + offsetY;
+                } else {
+                    fromX = fromLeft + offsetX;
+                    fromY = fromCenterY + offsetY;
+                }
+            } else {
+                // More vertical - use top or bottom edge
+                if (Math.sin(angle) > 0) {
+                    fromX = fromCenterX + offsetX;
+                    fromY = fromTop + fromHeight + offsetY;
+                } else {
+                    fromX = fromCenterX + offsetX;
+                    fromY = fromTop + offsetY;
+                }
+            }
+            
+            // To node edge point (opposite direction)
+            const angleReverse = angle + Math.PI;
+            if (Math.abs(Math.cos(angleReverse)) > Math.abs(Math.sin(angleReverse))) {
+                // More horizontal - use left or right edge
+                if (Math.cos(angleReverse) > 0) {
+                    toX = toLeft + toWidth + offsetX;
+                    toY = toCenterY + offsetY;
+                } else {
+                    toX = toLeft + offsetX;
+                    toY = toCenterY + offsetY;
+                }
+            } else {
+                // More vertical - use top or bottom edge
+                if (Math.sin(angleReverse) > 0) {
+                    toX = toCenterX + offsetX;
+                    toY = toTop + toHeight + offsetY;
+                } else {
+                    toX = toCenterX + offsetX;
+                    toY = toTop + offsetY;
+                }
+            }
+            
+            drawArrow(fromX, fromY, toX, toY, connId);
+        }
+
+        // Draw arrow between two points
+        function drawArrow(x1, y1, x2, y2, connId) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.classList.add('connection-arrow');
+            svg.setAttribute('data-connection-id', connId);
+            
+            const minX = Math.min(x1, x2);
+            const minY = Math.min(y1, y2);
+            const maxX = Math.max(x1, x2);
+            const maxY = Math.max(y1, y2);
+            
+            const width = maxX - minX + 40;
+            const height = maxY - minY + 40;
+            
+            svg.style.left = (minX - 20) + 'px';
+            svg.style.top = (minY - 20) + 'px';
+            svg.style.width = width + 'px';
+            svg.style.height = height + 'px';
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            const localX1 = x1 - minX + 20;
+            const localY1 = y1 - minY + 20;
+            const localX2 = x2 - minX + 20;
+            const localY2 = y2 - minY + 20;
+            
+            const angle = Math.atan2(localY2 - localY1, localX2 - localX1);
+            const arrowLength = 12;
+            const arrowWidth = 8;
+            
+            const headX = localX2 - Math.cos(angle) * 5;
+            const headY = localY2 - Math.sin(angle) * 5;
+            const leftX = headX - Math.cos(angle) * arrowLength + Math.sin(angle) * arrowWidth;
+            const leftY = headY - Math.sin(angle) * arrowLength - Math.cos(angle) * arrowWidth;
+            const rightX = headX - Math.cos(angle) * arrowLength - Math.sin(angle) * arrowWidth;
+            const rightY = headY - Math.sin(angle) * arrowLength + Math.cos(angle) * arrowWidth;
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            line.classList.add('arrow-line');
+            line.setAttribute('d', `M ${localX1} ${localY1} L ${headX} ${headY}`);
+            svg.appendChild(line);
+            
+            const head = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            head.classList.add('arrow-head');
+            head.setAttribute('points', `${headX},${headY} ${leftX},${leftY} ${rightX},${rightY}`);
+            svg.appendChild(head);
+            
+            svg.addEventListener('click', () => {
+                if (confirm('Delete this connection?')) {
+                    connections = connections.filter(c => c.id !== connId);
+                    redrawConnections();
+                }
+            });
+            
+            canvas.appendChild(svg);
+        }
+
+        // Draw a self-loop (node connected to itself)
+        // Clear all connections
+        function clearConnections() {
+            if (connections.length === 0) return;
+            
+            if (confirm('Clear all connections?')) {
+                connections = [];
+                redrawConnections();
+            }
+        }
+
+        // Export canvas as PNG
+        async function exportAsPNG() {
+            if (canvasNodes.length === 0) {
+                alert('Canvas is empty!');
+                return;
+            }
+
+            // Hide toolbar temporarily
+            const toolbar = document.querySelector('.toolbar');
+            toolbar.style.display = 'none';
+
+            // Create a new canvas element
+            const exportCanvas = document.createElement('canvas');
+            const ctx = exportCanvas.getContext('2d');
+            
+            // Calculate bounds
+            let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+            canvasNodes.forEach(nodeData => {
+                const node = document.getElementById(nodeData.id);
+                const x = parseInt(node.style.left);
+                const y = parseInt(node.style.top);
+                const width = node.offsetWidth;
+                const height = node.offsetHeight;
+                
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x + width);
+                maxY = Math.max(maxY, y + height);
+            });
+
+            const padding = 40;
+            const canvasWidth = maxX - minX + padding * 2;
+            const canvasHeight = maxY - minY + padding * 2;
+            
+            exportCanvas.width = canvasWidth;
+            exportCanvas.height = canvasHeight;
+
+            // Fill background
+            ctx.fillStyle = '#f5f5f5';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // Draw grid
+            ctx.strokeStyle = 'rgba(0,0,0,0.02)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvasWidth; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvasHeight);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvasHeight; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvasWidth, y);
+                ctx.stroke();
+            }
+
+            // Draw connections
+            connections.forEach(conn => {
+                const fromNode = document.getElementById(conn.from);
+                const toNode = document.getElementById(conn.to);
+                
+                if (!fromNode || !toNode) return;
+                
+                const fromX = parseInt(fromNode.style.left) - minX + padding + fromNode.offsetWidth / 2;
+                const fromY = parseInt(fromNode.style.top) - minY + padding + fromNode.offsetHeight / 2;
+                const toX = parseInt(toNode.style.left) - minX + padding + toNode.offsetWidth / 2;
+                const toY = parseInt(toNode.style.top) - minY + padding + toNode.offsetHeight / 2;
+                
+                // Draw line
+                ctx.strokeStyle = '#667eea';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(fromX, fromY);
+                ctx.lineTo(toX, toY);
+                ctx.stroke();
+                
+                // Draw arrow head
+                const angle = Math.atan2(toY - fromY, toX - fromX);
+                const arrowLength = 15;
+                const arrowWidth = 10;
+                
+                ctx.fillStyle = '#667eea';
+                ctx.beginPath();
+                ctx.moveTo(toX, toY);
+                ctx.lineTo(
+                    toX - arrowLength * Math.cos(angle) + arrowWidth * Math.sin(angle),
+                    toY - arrowLength * Math.sin(angle) - arrowWidth * Math.cos(angle)
+                );
+                ctx.lineTo(
+                    toX - arrowLength * Math.cos(angle) - arrowWidth * Math.sin(angle),
+                    toY - arrowLength * Math.sin(angle) + arrowWidth * Math.cos(angle)
+                );
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            // Draw nodes
+            for (const nodeData of canvasNodes) {
+                const node = document.getElementById(nodeData.id);
+                const x = parseInt(node.style.left) - minX + padding;
+                const y = parseInt(node.style.top) - minY + padding;
+                const width = node.offsetWidth;
+                const height = node.offsetHeight;
+                
+                // Node background
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = '#667eea';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.roundRect(x, y, width, height, 12);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Node content
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 16px Segoe UI';
+                ctx.fillText(nodeData.skill.name, x + 15, y + 30, width - 30);
+                
+                // Type badge
+                const badgeColors = {
+                    kql: { bg: '#e3f2fd', text: '#1976d2' },
+                    gpt: { bg: '#f3e5f5', text: '#7b1fa2' },
+                    mcp: { bg: '#e8f5e9', text: '#388e3c' },
+                    agent: { bg: '#fff3e0', text: '#f57c00' }
+                };
+                const colors = badgeColors[nodeData.skill.type] || { bg: '#f0f0f0', text: '#666' };
+                
+                ctx.fillStyle = colors.bg;
+                const badgeText = nodeData.skill.type.toUpperCase();
+                ctx.font = 'bold 11px Segoe UI';
+                const badgeWidth = ctx.measureText(badgeText).width + 20;
+                ctx.beginPath();
+                ctx.roundRect(x + width - badgeWidth - 15, y + 12, badgeWidth, 20, 10);
+                ctx.fill();
+                
+                ctx.fillStyle = colors.text;
+                ctx.fillText(badgeText, x + width - badgeWidth - 5, y + 26);
+                
+                // Description
+                ctx.fillStyle = '#666';
+                ctx.font = '13px Segoe UI';
+                const maxDescWidth = width - 30;
+                const words = nodeData.skill.description.split(' ');
+                let line = '';
+                let lineY = y + 55;
+                
+                for (let i = 0; i < words.length && lineY < y + height - 20; i++) {
+                    const testLine = line + words[i] + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    
+                    if (metrics.width > maxDescWidth && line !== '') {
+                        ctx.fillText(line, x + 15, lineY);
+                        line = words[i] + ' ';
+                        lineY += 18;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                if (lineY < y + height - 20) {
+                    ctx.fillText(line, x + 15, lineY);
+                }
+            }
+
+            // Convert to blob and download
+            exportCanvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'copilot-investigation-workflow.png';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                // Show toolbar again
+                toolbar.style.display = 'flex';
+            });
+        }
+    </script>
+</body>
+</html>

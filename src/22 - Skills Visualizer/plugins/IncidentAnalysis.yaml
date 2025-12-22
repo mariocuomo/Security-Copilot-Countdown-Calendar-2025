@@ -1,0 +1,183 @@
+Descriptor:
+  Name: IncidentAnalysis
+  DisplayName: Security Incident Analyzer
+  Description: Comprehensive plugin for analyzing and investigating security incidents
+
+SkillGroups:
+  - Format: KQL
+    Skills:
+      - Name: GetIncidentDetails
+        DisplayName: Get Incident Details
+        Description: Retrieves detailed information about a specific security incident
+        Inputs:
+          - Name: IncidentId
+            Description: The incident ID to investigate
+            Required: true
+        Settings:
+          Target: Sentinel
+          Template: |-
+            let incidentId = "{{IncidentId}}";
+            SecurityIncident
+            | where IncidentNumber == incidentId
+            | extend 
+                Severity = tostring(Severity),
+                Status = tostring(Status),
+                Owner = tostring(Owner)
+            | project 
+                TimeGenerated,
+                IncidentNumber,
+                Title,
+                Description,
+                Severity,
+                Status,
+                Owner,
+                AlertsCount,
+                BookmarksCount,
+                CommentsCount,
+                LastModifiedTime
+
+      - Name: GetRelatedAlerts
+        DisplayName: Get Related Alerts
+        Description: Retrieves all alerts associated with an incident
+        Inputs:
+          - Name: IncidentId
+            Description: The incident ID
+            Required: true
+        Settings:
+          Target: Sentinel
+          Template: |-
+            let incidentId = "{{IncidentId}}";
+            SecurityAlert
+            | where SystemAlertId in (
+                SecurityIncident
+                | where IncidentNumber == incidentId
+                | mv-expand AlertIds
+                | project tostring(AlertIds)
+            )
+            | project 
+                TimeGenerated,
+                AlertName,
+                AlertSeverity,
+                ProviderName,
+                Tactics,
+                Techniques,
+                CompromisedEntity,
+                Description
+            | order by TimeGenerated desc
+
+      - Name: GetIncidentTimeline
+        DisplayName: Get Incident Timeline
+        Description: Creates a timeline of events related to an incident
+        Inputs:
+          - Name: IncidentId
+            Description: The incident ID
+            Required: true
+          - Name: TimeWindow
+            Description: Time window around incident (e.g., 2h, 1d)
+            Required: false
+        Settings:
+          Target: Sentinel
+          Template: |-
+            let incidentId = "{{IncidentId}}";
+            let timeWindow = {{TimeWindow}};
+            let incidentTime = toscalar(
+                SecurityIncident
+                | where IncidentNumber == incidentId
+                | project TimeGenerated
+            );
+            let entities = 
+                SecurityIncident
+                | where IncidentNumber == incidentId
+                | mv-expand parse_json(Entities)
+                | project EntityId = tostring(Entities);
+            union
+                (SecurityAlert | where TimeGenerated between ((incidentTime - timeWindow) .. (incidentTime + timeWindow)) | project TimeGenerated, Type = "Alert", Details = AlertName),
+                (SigninLogs | where TimeGenerated between ((incidentTime - timeWindow) .. (incidentTime + timeWindow)) | project TimeGenerated, Type = "SignIn", Details = strcat(UserPrincipalName, " from ", IPAddress)),
+                (AuditLogs | where TimeGenerated between ((incidentTime - timeWindow) .. (incidentTime + timeWindow)) | project TimeGenerated, Type = "Audit", Details = OperationName)
+            | order by TimeGenerated asc
+
+  - Format: GPT
+    Skills:
+      - Name: AnalyzeIncident
+        DisplayName: Analyze Incident with AI
+        Description: Performs deep AI-powered analysis of security incidents
+        Inputs:
+          - Name: IncidentData
+            Description: Complete incident data including alerts and timeline
+            Required: true
+          - Name: ThreatIntelligence
+            Description: Additional threat intelligence context
+            Required: false
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            You are an expert security analyst investigating a security incident.
+            
+            Analyze the following incident data and provide:
+            1. Attack Vector Assessment
+            2. Threat Actor TTPs (Tactics, Techniques, Procedures)
+            3. Impact Analysis
+            4. Root Cause Analysis
+            5. Containment Recommendations
+            6. Remediation Steps
+            7. Prevention Measures
+            
+            Incident Data:
+            {{IncidentData}}
+            
+            {{#if ThreatIntelligence}}
+            Threat Intelligence Context:
+            {{ThreatIntelligence}}
+            {{/if}}
+            
+            Provide detailed, actionable analysis suitable for incident response team.
+
+      - Name: GenerateIncidentSummary
+        DisplayName: Generate Incident Summary
+        Description: Creates executive summary of incident for reporting
+        Inputs:
+          - Name: IncidentAnalysis
+            Description: Detailed incident analysis data
+            Required: true
+          - Name: IncludeRecommendations
+            Description: Include recommendations section
+            Required: false
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            Create a concise executive summary of this security incident.
+            
+            Include:
+            - Incident Overview (2-3 sentences)
+            - Key Findings (bullet points)
+            - Business Impact Assessment
+            - Current Status
+            {{#if IncludeRecommendations}}- Recommendations{{/if}}
+            
+            Analysis Data:
+            {{IncidentAnalysis}}
+            
+            Format for senior leadership audience.
+
+  - Format: Agent
+    Skills:
+      - Name: AutoInvestigateIncident
+        DisplayName: Auto-Investigate Incident
+        Description: Autonomous agent that investigates incidents end-to-end
+        Inputs:
+          - Name: IncidentId
+            Description: Incident ID to investigate
+            Required: true
+          - Name: InvestigationDepth
+            Description: Depth of investigation (quick/standard/deep)
+            Required: false
+        Settings:
+          AgentType: Investigation
+          Workflow: |-
+            1. Retrieve incident details
+            2. Gather related alerts and entities
+            3. Build timeline of events
+            4. Analyze attack patterns
+            5. Check threat intelligence
+            6. Generate findings report
+            7. Suggest remediation actions

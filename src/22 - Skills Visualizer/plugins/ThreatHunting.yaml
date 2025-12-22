@@ -1,0 +1,233 @@
+Descriptor:
+  Name: ThreatHunting
+  DisplayName: Advanced Threat Hunting
+  Description: Comprehensive plugin for proactive threat hunting and detection
+
+SkillGroups:
+  - Format: KQL
+    Skills:
+      - Name: HuntSuspiciousLogins
+        DisplayName: Hunt Suspicious Login Patterns
+        Description: Identifies unusual login patterns that may indicate compromise
+        Inputs:
+          - Name: TimeRange
+            Description: Time range to hunt (e.g., 7d, 30d)
+            Required: false
+          - Name: UserFilter
+            Description: Filter by specific user (optional)
+            Required: false
+        Settings:
+          Target: Sentinel
+          Template: |-
+            let timeRange = {{TimeRange}};
+            let userFilter = "{{UserFilter}}";
+            SigninLogs
+            | where TimeGenerated > ago(timeRange)
+            | where isempty(userFilter) or UserPrincipalName =~ userFilter
+            | where ResultType != 0
+            | summarize 
+                FailedAttempts = count(),
+                UniqueIPs = dcount(IPAddress),
+                UniqueLocations = dcount(Location),
+                Countries = make_set(Location)
+                by UserPrincipalName, AppDisplayName
+            | where FailedAttempts > 10 or UniqueIPs > 5
+            | order by FailedAttempts desc
+
+      - Name: HuntLateralMovement
+        DisplayName: Hunt Lateral Movement
+        Description: Detects potential lateral movement activity in the network
+        Inputs:
+          - Name: TimeRange
+            Description: Time range to analyze
+            Required: false
+        Settings:
+          Target: Defender
+          Template: |-
+            let timeRange = {{TimeRange}};
+            DeviceNetworkEvents
+            | where TimeGenerated > ago(timeRange)
+            | where ActionType in ("ConnectionSuccess", "InboundConnectionAccepted")
+            | where RemotePort in (445, 3389, 5985, 5986)
+            | summarize 
+                ConnectionCount = count(),
+                UniqueDestinations = dcount(RemoteIP),
+                DestinationIPs = make_set(RemoteIP)
+                by DeviceName, AccountName, RemotePort
+            | where UniqueDestinations > 5
+            | order by ConnectionCount desc
+
+      - Name: HuntPowerShellThreats
+        DisplayName: Hunt PowerShell Threats
+        Description: Identifies suspicious PowerShell execution patterns
+        Inputs:
+          - Name: Days
+            Description: Number of days to look back
+            Required: false
+        Settings:
+          Target: Defender
+          Template: |-
+            let lookback = {{Days}};
+            DeviceProcessEvents
+            | where TimeGenerated > ago(lookback)
+            | where FileName =~ "powershell.exe" or FileName =~ "pwsh.exe"
+            | where ProcessCommandLine has_any (
+                "bypass", "encoded", "invoke-expression", 
+                "downloadstring", "iex", "webclient", 
+                "hidden", "noprofile", "noninteractive"
+            )
+            | project 
+                TimeGenerated,
+                DeviceName,
+                AccountName,
+                FileName,
+                ProcessCommandLine,
+                InitiatingProcessFileName,
+                InitiatingProcessCommandLine
+            | order by TimeGenerated desc
+
+      - Name: HuntFileHashReputation
+        DisplayName: Hunt File Hash Reputation
+        Description: Checks file hashes against threat intelligence
+        Inputs:
+          - Name: FileHash
+            Description: File hash to investigate (SHA256)
+            Required: false
+          - Name: TimeRange
+            Description: Time range for file activity
+            Required: false
+        Settings:
+          Target: Defender
+          Template: |-
+            let hash = "{{FileHash}}";
+            let timeRange = {{TimeRange}};
+            DeviceFileEvents
+            | where TimeGenerated > ago(timeRange)
+            | where isempty(hash) or SHA256 =~ hash
+            | join kind=leftouter (
+                ThreatIntelligenceIndicator
+                | where FileHashValue != ""
+                | project FileHashValue, ThreatType, Description, ConfidenceScore
+            ) on $left.SHA256 == $right.FileHashValue
+            | where isnotempty(ThreatType) or isnotempty(FileHashValue)
+            | project 
+                TimeGenerated,
+                DeviceName,
+                FileName,
+                FolderPath,
+                SHA256,
+                ThreatType,
+                ConfidenceScore,
+                Description
+            | order by ConfidenceScore desc
+
+  - Format: GPT
+    Skills:
+      - Name: AnalyzeThreatHuntFindings
+        DisplayName: Analyze Threat Hunt Findings
+        Description: AI-powered analysis of threat hunting results
+        Inputs:
+          - Name: HuntResults
+            Description: Results from threat hunting queries
+            Required: true
+          - Name: HuntType
+            Description: Type of hunt performed
+            Required: true
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            You are an expert threat hunter analyzing security findings.
+            
+            Hunt Type: {{HuntType}}
+            
+            Hunt Results:
+            {{HuntResults}}
+            
+            Provide comprehensive analysis including:
+            1. Threat Assessment (True Positive/False Positive likelihood)
+            2. Attack Techniques (MITRE ATT&CK mapping)
+            3. Threat Actor Profile (if identifiable)
+            4. Scope of Compromise
+            5. Recommended Investigation Steps
+            6. Containment Actions
+            7. Detection Rule Recommendations
+            
+            Be specific and actionable in your recommendations.
+
+      - Name: GenerateHuntHypothesis
+        DisplayName: Generate Hunt Hypothesis
+        Description: Creates threat hunting hypotheses based on threat intelligence
+        Inputs:
+          - Name: ThreatContext
+            Description: Current threat landscape or intelligence
+            Required: true
+          - Name: Environment
+            Description: Organization's environment details
+            Required: false
+        Settings:
+          ModelName: gpt-4
+          Template: |-
+            Generate 3-5 threat hunting hypotheses based on current threat intelligence.
+            
+            Threat Context:
+            {{ThreatContext}}
+            
+            {{#if Environment}}
+            Environment Context:
+            {{Environment}}
+            {{/if}}
+            
+            For each hypothesis provide:
+            - Threat Scenario
+            - Data Sources to Query
+            - Key Indicators to Look For
+            - Expected False Positive Rate
+            - Priority Level
+            
+            Make hypotheses specific and actionable for immediate hunting.
+
+  - Format: Agent
+    Skills:
+      - Name: AutoThreatHunt
+        DisplayName: Automated Threat Hunt
+        Description: Autonomous threat hunting agent that runs multiple hunts
+        Inputs:
+          - Name: HuntScope
+            Description: Scope of hunt (Network/Identity/Endpoint/All)
+            Required: true
+          - Name: TimeRange
+            Description: Time range for the hunt
+            Required: false
+          - Name: ThreatFocus
+            Description: Specific threat to focus on (optional)
+            Required: false
+        Settings:
+          AgentType: ThreatHunting
+          Workflow: |-
+            1. Generate hunting hypotheses
+            2. Execute KQL queries across data sources
+            3. Correlate findings across different hunts
+            4. Analyze results with AI
+            5. Prioritize findings by risk
+            6. Generate comprehensive report
+            7. Create detection rules for confirmed threats
+
+      - Name: ContinuousThreatMonitor
+        DisplayName: Continuous Threat Monitor
+        Description: Continuously monitors for emerging threats
+        Inputs:
+          - Name: MonitoringDuration
+            Description: How long to monitor (hours)
+            Required: false
+          - Name: AlertThreshold
+            Description: Threshold for generating alerts (Low/Medium/High)
+            Required: false
+        Settings:
+          AgentType: Monitoring
+          Workflow: |-
+            1. Monitor threat intelligence feeds
+            2. Run periodic threat hunts
+            3. Analyze behavioral anomalies
+            4. Correlate with existing alerts
+            5. Generate alerts for high-confidence findings
+            6. Update detection rules dynamically
