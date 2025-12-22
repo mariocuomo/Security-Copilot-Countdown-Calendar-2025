@@ -48,7 +48,7 @@ Whether you’re looking to boost your expertise or simply enjoy the countdown t
 | 17th | Security Copilot Browser Extension | [Link](https://www.linkedin.com/pulse/17-security-copilot-browser-extension-mario-cuomo-hdyxe/?trackingId=yPYNwUBUW8KHruJSstANCg%3D%3D) | [Link](https://github.com/mariocuomo/Security-Copilot-Countdown-Calendar-2025/tree/main/src/17%20-%20browser%20extension) |
 | 18th | Different way to query Sentinel data via Security Copilot | [Link](https://www.linkedin.com/pulse/18-different-way-query-sentinel-data-via-security-copilot-cuomo-feo9e/) |  |
 | 19th | The Logic App skill, a hidden diamond | [Link](https://www.linkedin.com/pulse/19-logic-app-skil-hidden-diamond-mario-cuomo-g4zjf/) |  |
-| 22th | ... | ... | ... |
+| 22th | Create your use-cases with Security Copilot Skills Visualizer | [Link](https://www.linkedin.com/pulse/22-create-your-use-cases-security-copilot-skills-visualizer-cuomo-91sae/) | [Link](https://github.com/mariocuomo/Security-Copilot-Countdown-Calendar-2025/tree/main/src/22%20-%20Skills%20Visualizer) |
 | 23th | ... | ... | ... |
 | 24th | ... | ... | ... |
 | 26th | ... | ... | ... |
