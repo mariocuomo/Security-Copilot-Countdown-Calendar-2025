@@ -29,6 +29,10 @@ The main page allows you to:
 - **Apply UI-based filters** to quickly narrow down categories (KQL, GPT, MCP, Logic App, Agent)
 - **View in an organized way** all loaded Skills
 
+<div align="center">
+  <img src="https://github.com/mariocuomo/Security-Copilot-Countdown-Calendar-2025/blob/main/img/PVskills.png" width="1000"> </img>
+</div>
+
 ### 2. Skills Graph Analyzer (`graph-view.html`)
 
 An advanced feature that works as a **visual workflow designer** based on the Skills currently available in Security Copilot. It enables you to:
@@ -37,6 +41,10 @@ An advanced feature that works as a **visual workflow designer** based on the Sk
 - **Reason collaboratively** about how Copilot could execute workflows using existing Skills
 - **Export and import graphs** in JSON format to collaborate with colleagues
 - **Share workflow projects** with the team
+
+<div align="center">
+  <img src="https://github.com/mariocuomo/Security-Copilot-Countdown-Calendar-2025/blob/main/img/PVgraph.png" width="1000"> </img>
+</div>
 
 ## 📁 Project Structure
 
@@ -101,9 +109,6 @@ Although technically it is possible to extract all Skills from Security Copilot 
 - No external dependencies
 - Runs completely client-side
 
-## 📝 License
-
-Personal project - Use at your own risk.
 
 ## 🤝 Contributions
 
@@ -112,3 +117,4 @@ This is a personal project and a Proof of Concept. Feedback and suggestions are 
 ---
 
 **Note**: The files in the `plugins/` folder are fake examples provided for demonstration purposes only and are not functional in a real Security Copilot environment.
+
